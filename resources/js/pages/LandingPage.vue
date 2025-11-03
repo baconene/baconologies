@@ -1,5 +1,18 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black text-white overflow-hidden">
+  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black text-white">
+    <!-- Simple Navigation for testing -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
+      <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+        <h1 class="text-xl font-bold bg-gradient-to-r from-pink-400 to-orange-400 bg-clip-text text-transparent">
+          Baconologies.com
+        </h1>
+        <div class="space-x-4">
+          <button @click="scrollToSection('hero')" class="text-gray-400 hover:text-pink-400 transition-colors">Home</button>
+          <button @click="scrollToSection('services')" class="text-gray-400 hover:text-blue-400 transition-colors">Services</button>
+          <button @click="scrollToSection('contact')" class="text-gray-400 hover:text-orange-400 transition-colors">Contact</button>
+        </div>
+      </div>
+    </nav>
     <!-- Animated Background -->
     <div class="fixed inset-0 z-0">
       <div class="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-pink-600/10 to-orange-600/10"></div>
@@ -7,7 +20,7 @@
     </div>
 
     <!-- Hero Section -->
-    <section ref="hero" class="relative z-10 min-h-screen flex items-center justify-center px-4">
+    <section id="hero" ref="hero" class="relative z-10 min-h-screen flex items-center justify-center px-4 pt-20">
       <div class="text-center max-w-6xl mx-auto">
         <div ref="heroContent" class="space-y-8">
           <h1 class="text-6xl md:text-8xl font-bold bg-gradient-to-r from-pink-400 via-orange-400 to-blue-400 bg-clip-text text-transparent leading-tight">
@@ -42,7 +55,7 @@
     </section>
 
     <!-- About/Services Section -->
-    <section ref="services" class="relative z-10 py-20 px-4">
+    <section id="services" ref="services" class="relative z-10 py-20 px-4">
       <div class="max-w-7xl mx-auto">
         <h2 class="text-5xl font-bold text-center mb-16 bg-gradient-to-r from-blue-400 to-pink-400 bg-clip-text text-transparent">
           What We Build
@@ -167,7 +180,7 @@
     </section>
 
     <!-- Contact Section -->
-    <section ref="contact" class="relative z-10 py-20 px-4">
+    <section id="contact" ref="contact" class="relative z-10 py-20 px-4">
       <div class="max-w-4xl mx-auto">
         <h2 class="text-5xl font-bold text-center mb-16 bg-gradient-to-r from-pink-400 to-blue-400 bg-clip-text text-transparent">
           Let's Build Something Amazing
@@ -239,12 +252,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, onBeforeUnmount } from 'vue'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { ScrollToPlugin } from 'gsap/ScrollToPlugin'
 
 // Register GSAP plugins
-gsap.registerPlugin(ScrollTrigger)
+gsap.registerPlugin(ScrollTrigger, ScrollToPlugin)
 
 // Template refs
 const hero = ref<HTMLElement>()
@@ -388,12 +402,31 @@ const toggleDarkMode = () => {
 }
 
 const scrollToTopAction = () => {
-  gsap.to(window, { duration: 1, scrollTo: 0, ease: "power2.inOut" })
+  gsap.to(window, { 
+    duration: 1.2, 
+    scrollTo: { y: 0, autoKill: false }, 
+    ease: "power2.inOut" 
+  })
 }
 
 const scrollToServices = () => {
   if (services.value) {
-    services.value.scrollIntoView({ behavior: 'smooth' })
+    gsap.to(window, {
+      duration: 1,
+      scrollTo: { y: services.value, offsetY: -100, autoKill: false },
+      ease: "power2.inOut"
+    })
+  }
+}
+
+const scrollToSection = (sectionId: string) => {
+  const element = document.getElementById(sectionId)
+  if (element) {
+    gsap.to(window, {
+      duration: 1.2,
+      scrollTo: { y: element, offsetY: -100, autoKill: false },
+      ease: "power2.inOut"
+    })
   }
 }
 
@@ -424,128 +457,182 @@ const createParticles = () => {
 }
 
 const initAnimations = () => {
+  // Clear any existing ScrollTriggers
+  ScrollTrigger.getAll().forEach(trigger => trigger.kill())
+  
   // Hero animations
   const tl = gsap.timeline()
   
   if (heroContent.value) {
-    tl.from(heroContent.value, {
-      opacity: 0,
-      y: 100,
+    gsap.set(heroContent.value.children, { opacity: 0, y: 50 })
+    tl.to(heroContent.value.children, {
+      opacity: 1,
+      y: 0,
       duration: 1.5,
+      stagger: 0.2,
       ease: "power3.out"
     })
   }
   
   if (btnGetStarted.value && btnServices.value) {
-    tl.from([btnGetStarted.value, btnServices.value], {
-      opacity: 0,
-      y: 50,
+    gsap.set([btnGetStarted.value, btnServices.value], { opacity: 0, y: 30 })
+    tl.to([btnGetStarted.value, btnServices.value], {
+      opacity: 1,
+      y: 0,
       duration: 1,
       stagger: 0.2,
       ease: "power2.out"
-    }, "-=0.5")
+    }, "-=0.8")
   }
   
   if (scrollIndicator.value) {
-    tl.from(scrollIndicator.value, {
-      opacity: 0,
-      y: 20,
+    gsap.set(scrollIndicator.value, { opacity: 0, y: 20 })
+    tl.to(scrollIndicator.value, {
+      opacity: 1,
+      y: 0,
       duration: 0.8,
       ease: "power2.out"
-    }, "-=0.3")
+    }, "-=0.5")
   }
 
   // Service cards animation
-  gsap.from(serviceCards.value, {
-    scrollTrigger: {
+  if (serviceCards.value.length > 0 && services.value) {
+    gsap.set(serviceCards.value, { opacity: 0, y: 100, rotation: 5 })
+    ScrollTrigger.create({
       trigger: services.value,
-      start: "top 80%"
-    },
-    opacity: 0,
-    y: 100,
-    rotation: 5,
-    duration: 1,
-    stagger: 0.2,
-    ease: "power3.out"
-  })
+      start: "top 80%",
+      onEnter: () => {
+        gsap.to(serviceCards.value, {
+          opacity: 1,
+          y: 0,
+          rotation: 0,
+          duration: 1,
+          stagger: 0.2,
+          ease: "power3.out"
+        })
+      }
+    })
+  }
 
   // Tech logos animation
-  gsap.from(techLogos.value, {
-    scrollTrigger: {
+  if (techLogos.value.length > 0 && techStack.value) {
+    gsap.set(techLogos.value, { opacity: 0, scale: 0, rotation: 180 })
+    ScrollTrigger.create({
       trigger: techStack.value,
-      start: "top 80%"
-    },
-    opacity: 0,
-    scale: 0,
-    rotation: 180,
-    duration: 0.8,
-    stagger: 0.1,
-    ease: "back.out(1.7)"
-  })
+      start: "top 80%",
+      onEnter: () => {
+        gsap.to(techLogos.value, {
+          opacity: 1,
+          scale: 1,
+          rotation: 0,
+          duration: 0.8,
+          stagger: 0.1,
+          ease: "back.out(1.7)"
+        })
+      }
+    })
+  }
 
   // Pricing cards animation
-  gsap.from(pricingCards.value, {
-    scrollTrigger: {
+  if (pricingCards.value.length > 0 && pricing.value) {
+    gsap.set(pricingCards.value, { opacity: 0, y: 100, scale: 0.8 })
+    ScrollTrigger.create({
       trigger: pricing.value,
-      start: "top 80%"
-    },
-    opacity: 0,
-    y: 100,
-    scale: 0.8,
-    duration: 1,
-    stagger: 0.3,
-    ease: "power3.out"
-  })
+      start: "top 80%",
+      onEnter: () => {
+        gsap.to(pricingCards.value, {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 1,
+          stagger: 0.3,
+          ease: "power3.out"
+        })
+      }
+    })
+  }
 
   // Team cards animation
-  gsap.from(teamCards.value, {
-    scrollTrigger: {
+  if (teamCards.value.length > 0 && team.value) {
+    gsap.set(teamCards.value, { opacity: 0, y: 80, rotation: -10 })
+    ScrollTrigger.create({
       trigger: team.value,
-      start: "top 80%"
-    },
-    opacity: 0,
-    y: 80,
-    rotation: -10,
-    duration: 1,
-    stagger: 0.15,
-    ease: "power2.out"
-  })
+      start: "top 80%",
+      onEnter: () => {
+        gsap.to(teamCards.value, {
+          opacity: 1,
+          y: 0,
+          rotation: 0,
+          duration: 1,
+          stagger: 0.15,
+          ease: "power2.out"
+        })
+      }
+    })
+  }
 
   // Contact form animation
   if (contactForm.value && contact.value) {
-    gsap.from(contactForm.value, {
-      scrollTrigger: {
-        trigger: contact.value,
-        start: "top 80%"
-      },
-      opacity: 0,
-      y: 60,
-      duration: 1.2,
-      ease: "power2.out"
+    gsap.set(contactForm.value, { opacity: 0, y: 60 })
+    ScrollTrigger.create({
+      trigger: contact.value,
+      start: "top 80%",
+      onEnter: () => {
+        if (contactForm.value) {
+          gsap.to(contactForm.value, {
+            opacity: 1,
+            y: 0,
+            duration: 1.2,
+            ease: "power2.out"
+          })
+        }
+      }
     })
   }
 
   // Scroll to top button
-  ScrollTrigger.create({
-    start: "top -100",
-    end: "bottom bottom",
-    onUpdate: self => {
-      if (scrollToTop.value) {
-        if (self.progress > 0.1) {
-          gsap.to(scrollToTop.value, { opacity: 1, pointerEvents: 'auto', duration: 0.3 })
-        } else {
-          gsap.to(scrollToTop.value, { opacity: 0, pointerEvents: 'none', duration: 0.3 })
+  if (scrollToTop.value) {
+    ScrollTrigger.create({
+      start: "top -100",
+      end: "max",
+      onUpdate: self => {
+        if (scrollToTop.value) {
+          if (self.progress > 0.1) {
+            gsap.to(scrollToTop.value, { 
+              opacity: 1, 
+              pointerEvents: 'auto', 
+              duration: 0.3,
+              scale: 1
+            })
+          } else {
+            gsap.to(scrollToTop.value, { 
+              opacity: 0, 
+              pointerEvents: 'none', 
+              duration: 0.3,
+              scale: 0.8
+            })
+          }
         }
       }
-    }
-  })
+    })
+  }
 }
 
 onMounted(() => {
+  console.log('Landing page mounted, initializing...')
   nextTick(() => {
-    createParticles()
-    initAnimations()
+    setTimeout(() => {
+      createParticles()
+      initAnimations()
+      console.log('Animations initialized!')
+    }, 200)
   })
+})
+
+onBeforeUnmount(() => {
+  // Clean up GSAP animations and ScrollTriggers
+  ScrollTrigger.getAll().forEach(trigger => trigger.kill())
+  gsap.killTweensOf("*")
 })
 </script>
 

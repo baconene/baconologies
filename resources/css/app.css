@@ -261,3 +261,35 @@
 html {
     scroll-behavior: smooth;
 }
+
+/* Performance optimizations for animations */
+* {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-perspective: 1000;
+    perspective: 1000;
+}
+
+/* Ensure smooth transforms */
+.transform,
+[class*="transform"] {
+    transform-style: preserve-3d;
+    will-change: transform;
+}
+
+/* Landing page specific smooth animations */
+.landing-page-element {
+    will-change: opacity, transform;
+    transform: translate3d(0, 0, 0);
+}
+
+/* Improve button interactions */
+button, a {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Optimize particle animations */
+.particle {
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+}

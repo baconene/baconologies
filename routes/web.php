@@ -14,6 +14,8 @@ Route::get('/demo', function () {
     return Inertia::render('DemoSystems');
 })->name('demo');
 
+
+
 Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
