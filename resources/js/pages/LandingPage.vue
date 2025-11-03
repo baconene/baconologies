@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black text-white" style="scroll-behavior: smooth;">
+  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black text-white">
     <!-- Embedded Transparent Navigation -->
     <nav class="fixed top-0 left-0 right-0 z-50 bg-transparent backdrop-blur-sm">
       <div class="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center">
@@ -7,9 +7,9 @@
           Baconologies.com
         </h1>
         <div class="space-x-6">
-          <button @click="scrollToSection('hero')" class="text-gray-300/80 hover:text-pink-400 transition-colors duration-300 text-sm font-medium">Home</button>
-          <button @click="scrollToSection('services')" class="text-gray-300/80 hover:text-blue-400 transition-colors duration-300 text-sm font-medium">Services</button>
-          <button @click="scrollToSection('contact')" class="text-gray-300/80 hover:text-orange-400 transition-colors duration-300 text-sm font-medium">Contact</button>
+          <a href="#hero" class="text-gray-300/80 hover:text-pink-400 transition-colors duration-300 text-sm font-medium">Home</a>
+          <a href="#services" class="text-gray-300/80 hover:text-blue-400 transition-colors duration-300 text-sm font-medium">Services</a>
+          <a href="#contact" class="text-gray-300/80 hover:text-orange-400 transition-colors duration-300 text-sm font-medium">Contact</a>
         </div>
       </div>
     </nav>
@@ -67,10 +67,10 @@
               <span class="relative z-10">View Live Demos</span>
               <div class="absolute inset-0 rounded-full bg-gradient-to-r from-pink-400 to-orange-400 opacity-0 group-hover:opacity-75 blur transition-opacity duration-300"></div>
             </a>
-            <button ref="btnServices" @click="scrollToServices" class="group relative px-8 py-4 border-2 border-blue-400 rounded-full text-lg font-semibold text-blue-400 hover:bg-blue-400 hover:text-black transition-all duration-300 transform hover:scale-105">
+            <a href="#services" ref="btnServices" class="group relative inline-block px-8 py-4 border-2 border-blue-400 rounded-full text-lg font-semibold text-blue-400 hover:bg-blue-400 hover:text-black transition-all duration-300 transform hover:scale-105">
               Our Services
               <div class="absolute inset-0 rounded-full bg-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </button>
+            </a>
           </div>
         </div>
       </div>
@@ -364,11 +364,10 @@
     </footer>
 
     <!-- Scroll to Top Button -->
-    <button ref="scrollToTop" 
-            @click="scrollToTopAction"
+    <a href="#hero" ref="scrollToTop" 
             class="fixed bottom-8 right-8 z-50 w-12 h-12 bg-gradient-to-r from-pink-500 to-orange-500 rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-2xl hover:shadow-pink-500/25 transition-all duration-300 transform hover:scale-110 opacity-0 pointer-events-none">
       ↑
-    </button>
+    </a>
 
     <!-- Dark Mode Toggle -->
     <button @click="toggleDarkMode" 
@@ -382,10 +381,9 @@
 import { ref, onMounted, nextTick, onBeforeUnmount } from 'vue'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { ScrollToPlugin } from 'gsap/ScrollToPlugin'
 
 // Register GSAP plugins
-gsap.registerPlugin(ScrollTrigger, ScrollToPlugin)
+gsap.registerPlugin(ScrollTrigger)
 
 // Template refs
 const hero = ref<HTMLElement>()
@@ -407,10 +405,7 @@ const scrollToTop = ref<HTMLElement>()
 const particles = ref<HTMLElement>()
 const developerCard = ref(null);
 
-// Section scrolling state
-const currentSectionIndex = ref(0)
-const isScrolling = ref(false)
-const sections = ['hero', 'services', 'techStack', 'pricing', 'team', 'contact']
+// Removed smooth scrolling functionality
 
 // Data
 const servicesData = [
@@ -593,93 +588,7 @@ const toggleDarkMode = () => {
   console.log('Dark mode toggled')
 }
 
-const scrollToTopAction = () => {
-  gsap.to(window, { 
-    duration: 1.2, 
-    scrollTo: { y: 0, autoKill: false }, 
-    ease: "power2.inOut" 
-  })
-}
-
-const scrollToServices = () => {
-  if (services.value) {
-    gsap.to(window, {
-      duration: 1,
-      scrollTo: { y: services.value, offsetY: -100, autoKill: false },
-      ease: "power2.inOut"
-    })
-  }
-}
-
-const scrollToSection = (sectionId: string) => {
-  const element = document.getElementById(sectionId)
-  if (element) {
-    isScrolling.value = true
-    gsap.to(window, {
-      duration: 0.8,
-      scrollTo: { y: element, offsetY: -50, autoKill: false },
-      ease: "power3.inOut",
-      onComplete: () => {
-        setTimeout(() => {
-          isScrolling.value = false
-        }, 100)
-      }
-    })
-  }
-}
-
-const getCurrentSectionIndex = () => {
-  const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-  const windowHeight = window.innerHeight
-  
-  for (let i = 0; i < sections.length; i++) {
-    const element = document.getElementById(sections[i])
-    if (element) {
-      const rect = element.getBoundingClientRect()
-      const elementTop = rect.top + scrollTop
-      
-      if (scrollTop >= elementTop - windowHeight / 2 && 
-          scrollTop < elementTop + rect.height - windowHeight / 2) {
-        return i
-      }
-    }
-  }
-  return 0
-}
-
-const scrollToNextSection = (direction: 'up' | 'down') => {
-  if (isScrolling.value) return
-  
-  // Update current section based on actual scroll position
-  currentSectionIndex.value = getCurrentSectionIndex()
-  
-  const newIndex = direction === 'down' 
-    ? Math.min(currentSectionIndex.value + 1, sections.length - 1)
-    : Math.max(currentSectionIndex.value - 1, 0)
-  
-  if (newIndex !== currentSectionIndex.value) {
-    currentSectionIndex.value = newIndex
-    scrollToSection(sections[newIndex])
-  }
-}
-
-let wheelTimeout: number | null = null
-
-const handleWheelScroll = (event: WheelEvent) => {
-  event.preventDefault()
-  
-  if (isScrolling.value) return
-  
-  // Debounce wheel events
-  if (wheelTimeout) {
-    clearTimeout(wheelTimeout)
-  }
-  
-  wheelTimeout = setTimeout(() => {
-    const direction = event.deltaY > 0 ? 'down' : 'up'
-    scrollToNextSection(direction)
-  }, 50)
-}
+// Removed all smooth scrolling functions
 
 // Animation functions
 const createParticles = () => {
@@ -900,8 +809,7 @@ onMounted(() => {
     }, 200)
   });
   
-  // Add wheel event listener for section scrolling
-  window.addEventListener('wheel', handleWheelScroll, { passive: false })
+  // Smooth scrolling removed - using native browser scrolling
   
   gsap.from(developerCard.value, {
     duration: 1.8,
@@ -923,9 +831,6 @@ onBeforeUnmount(() => {
   // Clean up GSAP animations and ScrollTriggers
   ScrollTrigger.getAll().forEach(trigger => trigger.kill())
   gsap.killTweensOf("*")
-  
-  // Remove wheel event listener
-  window.removeEventListener('wheel', handleWheelScroll)
 })
 </script>
 
