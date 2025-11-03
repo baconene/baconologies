@@ -170,3 +170,94 @@
         @apply bg-background text-foreground;
     }
 }
+
+/* Baconologies Landing Page Custom Styles */
+@layer components {
+    /* Glassmorphism effects */
+    .glass-card {
+        @apply backdrop-blur-lg bg-white/5 border border-white/10;
+    }
+    
+    /* Neon glow effects */
+    .neon-pink {
+        box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+    }
+    
+    .neon-blue {
+        box-shadow: 0 0 20px rgba(0, 191, 255, 0.5);
+    }
+    
+    .neon-orange {
+        box-shadow: 0 0 20px rgba(255, 165, 0, 0.5);
+    }
+    
+    /* Animated gradients */
+    .gradient-shift {
+        background: linear-gradient(270deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+        background-size: 800% 800%;
+        animation: gradientShift 8s ease infinite;
+    }
+    
+    /* Floating animation */
+    .float {
+        animation: float 6s ease-in-out infinite;
+    }
+    
+    /* Pulse glow animation */
+    .pulse-glow {
+        animation: pulseGlow 2s ease-in-out infinite alternate;
+    }
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes float {
+    0%, 100% { 
+        transform: translateY(0px) rotate(0deg);
+    }
+    25% { 
+        transform: translateY(-20px) rotate(1deg);
+    }
+    50% { 
+        transform: translateY(-10px) rotate(-1deg);
+    }
+    75% { 
+        transform: translateY(-30px) rotate(0.5deg);
+    }
+}
+
+@keyframes pulseGlow {
+    0% {
+        box-shadow: 0 0 20px rgba(255, 107, 107, 0.4);
+    }
+    100% {
+        box-shadow: 0 0 40px rgba(255, 107, 107, 0.8);
+    }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #ff6b6b, #4ecdc4);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #ff5252, #26a69a);
+}
+
+/* Smooth scroll behavior */
+html {
+    scroll-behavior: smooth;
+}
