@@ -1,15 +1,15 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black text-white">
-    <!-- Simple Navigation for testing -->
-    <nav class="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
-      <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black text-white" style="scroll-behavior: smooth;">
+    <!-- Embedded Transparent Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-transparent backdrop-blur-sm">
+      <div class="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center">
         <h1 class="text-xl font-bold bg-gradient-to-r from-pink-400 to-orange-400 bg-clip-text text-transparent">
           Baconologies.com
         </h1>
-        <div class="space-x-4">
-          <button @click="scrollToSection('hero')" class="text-gray-400 hover:text-pink-400 transition-colors">Home</button>
-          <button @click="scrollToSection('services')" class="text-gray-400 hover:text-blue-400 transition-colors">Services</button>
-          <button @click="scrollToSection('contact')" class="text-gray-400 hover:text-orange-400 transition-colors">Contact</button>
+        <div class="space-x-6">
+          <button @click="scrollToSection('hero')" class="text-gray-300/80 hover:text-pink-400 transition-colors duration-300 text-sm font-medium">Home</button>
+          <button @click="scrollToSection('services')" class="text-gray-300/80 hover:text-blue-400 transition-colors duration-300 text-sm font-medium">Services</button>
+          <button @click="scrollToSection('contact')" class="text-gray-300/80 hover:text-orange-400 transition-colors duration-300 text-sm font-medium">Contact</button>
         </div>
       </div>
     </nav>
@@ -20,8 +20,37 @@
     </div>
 
     <!-- Hero Section -->
-    <section id="hero" ref="hero" class="relative z-10 min-h-screen flex items-center justify-center px-4 pt-20">
-      <div class="text-center max-w-6xl mx-auto">
+    <section id="hero" ref="hero" class="relative z-10 min-h-screen flex items-center justify-center px-4 pt-20 overflow-hidden">
+      <!-- Diagonal Background Images -->
+      <div class="absolute inset-0 z-0 opacity-30">
+        <div class="absolute top-0 left-0 w-full h-full grid grid-cols-2 grid-rows-2 gap-4 transform rotate-12 scale-110 -translate-y-10">
+          <!-- Top Left - Education/Learning -->
+          <div class="diagonal-bg-education relative h-full w-full rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/20">
+            <img src="/images/learn.webp" alt="Learning Systems" class="absolute inset-0 w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-500/70 via-cyan-400/50 to-blue-600/70 mix-blend-multiply"></div>
+            <div class="absolute inset-0 bg-blue-900/20"></div>
+          </div>
+          <!-- Top Right - Billing/Payment -->
+          <div class="diagonal-bg-billing relative h-full w-full rounded-2xl overflow-hidden shadow-2xl shadow-pink-500/20">
+            <img src="/images/billing.webp" alt="Billing Systems" class="absolute inset-0 w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-bl from-pink-500/70 via-rose-400/50 to-pink-600/70 mix-blend-multiply"></div>
+            <div class="absolute inset-0 bg-pink-900/20"></div>
+          </div>
+          <!-- Bottom Left - Mapping/Infrastructure -->
+          <div class="diagonal-bg-mapping relative h-full w-full rounded-2xl overflow-hidden shadow-2xl shadow-orange-500/20">
+            <img src="/images/geomap.webp" alt="Mapping Systems" class="absolute inset-0 w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-tr from-orange-500/70 via-amber-400/50 to-orange-600/70 mix-blend-multiply"></div>
+            <div class="absolute inset-0 bg-orange-900/20"></div>
+          </div>
+          <!-- Bottom Right - Utilities/Grid -->
+          <div class="diagonal-bg-utilities relative h-full w-full rounded-2xl overflow-hidden shadow-2xl shadow-purple-500/20">
+            <img src="/images/grid.webp" alt="Grid Systems" class="absolute inset-0 w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-tl from-purple-500/70 via-violet-400/50 to-purple-600/70 mix-blend-multiply"></div>
+            <div class="absolute inset-0 bg-purple-900/20"></div>
+          </div>
+        </div>
+      </div>
+      <div class="text-center max-w-6xl mx-auto relative z-10">
         <div ref="heroContent" class="space-y-8">
           <h1 class="text-6xl md:text-8xl font-bold bg-gradient-to-r from-pink-400 via-orange-400 to-blue-400 bg-clip-text text-transparent leading-tight">
             Engineering Smart Solutions
@@ -44,60 +73,82 @@
             </button>
           </div>
         </div>
-        
-        <!-- Scroll Indicator -->
-        <div ref="scrollIndicator" class="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-          <div class="w-6 h-10 border-2 border-gray-400 rounded-full flex justify-center">
-            <div class="w-1 h-3 bg-gradient-to-b from-pink-400 to-orange-400 rounded-full mt-2 animate-bounce"></div>
-          </div>
-        </div>
       </div>
     </section>
 
     <!-- About/Services Section -->
-    <section id="services" ref="services" class="relative z-10 py-20 px-4">
+    <section id="services" ref="services" class="relative z-10 py-32 px-4 overflow-hidden">
       <div class="max-w-7xl mx-auto">
-        <h2 class="text-5xl font-bold text-center mb-16 bg-gradient-to-r from-blue-400 to-pink-400 bg-clip-text text-transparent">
+        <h2 class="text-5xl md:text-6xl font-bold text-center mb-20 bg-gradient-to-r from-blue-400 to-pink-400 bg-clip-text text-transparent">
           What We Build
         </h2>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-16">
           <div v-for="(service, index) in servicesData" :key="index" 
                ref="serviceCards"
-               class="group relative p-8 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 hover:border-pink-400/50 transition-all duration-500 transform hover:scale-105 hover:rotate-1">
-            <div class="absolute inset-0 bg-gradient-to-br from-pink-500/10 to-blue-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <div class="relative z-10">
-              <div class="w-16 h-16 mb-6 rounded-full bg-gradient-to-br from-pink-400 to-orange-400 flex items-center justify-center text-2xl">
-                {{ service.icon }}
-              </div>
-              <h3 class="text-2xl font-bold mb-4 text-white group-hover:text-pink-400 transition-colors">
-                {{ service.title }}
-              </h3>
-              <p class="text-gray-400 group-hover:text-gray-300 transition-colors leading-relaxed">
-                {{ service.description }}
-              </p>
+               class="service-item group text-center space-y-6 transform transition-all duration-700 hover:scale-110">
+            
+            <!-- Animated SVG Icon -->
+            <div class="service-icon-container relative mx-auto">
+              <div class="w-20 h-20 mx-auto text-blue-400 group-hover:text-orange-400 transition-all duration-500 transform group-hover:scale-125 group-hover:rotate-12" 
+                   v-html="service.svg"></div>
+              
+              <!-- Spotlight Effect -->
+              <div class="service-spotlight"></div>
+              
+              <!-- Glow Effect -->
+              <div class="absolute inset-0 w-20 h-20 mx-auto bg-gradient-to-r from-pink-500/30 to-blue-500/30 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+              
+              <!-- Pulse Ring -->
+              <div class="absolute inset-0 w-20 h-20 mx-auto rounded-full border-2 border-blue-400/20 group-hover:border-orange-400/60 transition-all duration-500"></div>
             </div>
+            
+            <!-- Animated Title -->
+            <h3 class="text-xl lg:text-2xl font-bold text-white group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-pink-400 group-hover:to-orange-400 group-hover:bg-clip-text transition-all duration-500 transform group-hover:translate-y-[-4px]">
+              {{ service.title }}
+            </h3>
+            
+            <!-- Animated Description -->
+            <p class="text-sm lg:text-base text-gray-400 group-hover:text-gray-200 leading-relaxed transition-all duration-500 transform group-hover:translate-y-[-2px] opacity-80 group-hover:opacity-100">
+              {{ service.description }}
+            </p>
+            
+            <!-- Hover Line -->
+            <div class="w-0 h-0.5 bg-gradient-to-r from-pink-400 to-orange-400 mx-auto transition-all duration-500 group-hover:w-16"></div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Technology Stack Section -->
-    <section ref="techStack" class="relative z-10 py-20 px-4 bg-black/20">
+    <section id="techStack" ref="techStack" class="relative z-10 py-20 px-4 bg-black/20">
       <div class="max-w-7xl mx-auto">
         <h2 class="text-5xl font-bold text-center mb-16 bg-gradient-to-r from-orange-400 to-blue-400 bg-clip-text text-transparent">
           Our Stack
         </h2>
         
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-6">
           <div v-for="(tech, index) in technologiesData" :key="index"
                ref="techLogos"
-               class="group flex flex-col items-center p-6 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-orange-400/50 transition-all duration-300 transform hover:scale-110 hover:-translate-y-2">
-            <div class="w-16 h-16 mb-4 rounded-lg bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-2xl group-hover:shadow-lg group-hover:shadow-orange-400/25 transition-all duration-300">
-              {{ tech.icon }}
+               class="group flex flex-col items-center transition-all duration-300 transform hover:scale-110 hover:-translate-y-2">
+            <div class="tech-logo-container relative mb-3">
+              <img 
+                :src="tech.logo" 
+                :alt="tech.name"
+                class="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 mx-auto filter brightness-90 hover:brightness-110 transition-all duration-300 object-contain"
+                style="filter: drop-shadow(0 0 15px rgba(251, 146, 60, 0.4));"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+              />
+              <div class="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 mx-auto bg-gradient-to-br from-gray-700 to-gray-800 rounded-lg items-center justify-center text-lg font-bold text-orange-400 hidden">
+                {{ tech.name.charAt(0) }}
+              </div>
+              <div class="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-amber-500/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             </div>
-            <span class="text-sm font-medium text-gray-300 group-hover:text-orange-400 transition-colors text-center">
+            <span class="text-xs sm:text-sm font-medium text-gray-300 group-hover:text-orange-400 transition-colors text-center mb-1 leading-tight">
               {{ tech.name }}
+            </span>
+            <span class="text-xs text-gray-500 group-hover:text-gray-400 transition-colors text-center">
+              {{ tech.category }}
             </span>
           </div>
         </div>
@@ -105,7 +156,7 @@
     </section>
 
     <!-- Pricing Section -->
-    <section ref="pricing" class="relative z-10 py-20 px-4">
+    <section id="pricing" ref="pricing" class="relative z-10 py-20 px-4">
       <div class="max-w-7xl mx-auto">
         <h2 class="text-5xl font-bold text-center mb-8 bg-gradient-to-r from-pink-400 to-blue-400 bg-clip-text text-transparent">
           Flexible Subscription Models
@@ -149,36 +200,112 @@
       </div>
     </section>
 
-    <!-- Team Section -->
-    <section ref="team" class="relative z-10 py-20 px-4 bg-black/20">
-      <div class="max-w-7xl mx-auto">
-        <h2 class="text-5xl font-bold text-center mb-16 bg-gradient-to-r from-blue-400 to-orange-400 bg-clip-text text-transparent">
-          Meet the Baconologists
-        </h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-8">
-          <div v-for="(member, index) in teamMembersData" :key="index"
-               ref="teamCards"
-               class="group relative">
-            <div class="relative overflow-hidden rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 hover:border-pink-400/50 transition-all duration-500 transform hover:scale-105 hover:rotate-2">
-              <div class="p-6 text-center">
-                <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-pink-400 to-orange-400 flex items-center justify-center text-3xl font-bold text-black">
-                  {{ member.initials }}
-                </div>
-                <h3 class="text-xl font-bold mb-2 text-white group-hover:text-pink-400 transition-colors">
-                  {{ member.name }}
-                </h3>
-                <p class="text-blue-400 mb-4 font-medium">{{ member.role }}</p>
-                <p class="text-gray-400 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  {{ member.funFact }}
-                </p>
+   <!-- Team Section -->
+  <section
+    id="team"
+    ref="team"
+    class="relative z-10 py-24 px-6 bg-gradient-to-b from-black via-slate-900 to-black overflow-hidden text-gray-300"
+  >
+    <div class="max-w-6xl mx-auto">
+      <!-- Section Title -->
+      <h2
+        class="text-5xl md:text-6xl font-extrabold text-center mb-20 bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent tracking-tight"
+      >
+        Meet the Developer
+      </h2>
+
+      <!-- Developer Profile Card -->
+      <div
+        ref="developerCard"
+        class="relative mx-auto max-w-5xl bg-gradient-to-br from-slate-900/90 to-black/80 backdrop-blur-2xl rounded-3xl border border-emerald-500/10 shadow-[0_0_40px_-10px_rgba(0,255,200,0.25)] overflow-hidden group transform rotate-3"
+      >
+        <div
+          class="grid lg:grid-cols-2 gap-10 items-center px-10 py-12 lg:px-16 lg:py-16"
+        >
+          <!-- Left Side - Developer Image -->
+          <div class="flex justify-center lg:justify-start relative">
+            <div
+              class="w-64 h-64 lg:w-80 lg:h-80 rounded-3xl overflow-hidden border-4 border-emerald-500/30 shadow-2xl grayscale hover:grayscale-0 transition-all duration-500"
+            >
+              <img
+                :src="developerData.avatar"
+                :alt="developerData.name"
+                class="w-full h-full object-cover"
+              />
+            </div>
+
+            <!-- Glow Accent -->
+            <div
+              class="absolute -z-10 w-96 h-96 bg-emerald-500/30 blur-[120px] rounded-full opacity-20 group-hover:opacity-40 transition-all duration-700"
+            ></div>
+          </div>
+
+          <!-- Right Side - Developer Info -->
+          <div class="space-y-6">
+            <div>
+              <h3
+                class="text-4xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent"
+              >
+                {{ developerData.name }}
+              </h3>
+              <p class="text-xl text-emerald-400 font-semibold mt-2">
+                {{ developerData.title }}
+              </p>
+              <p class="text-gray-400 text-base mt-3 leading-relaxed">
+                {{ developerData.subtitle }}
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div class="flex items-center space-x-3">
+                <div class="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                <span class="text-gray-400">Location:</span>
+                <span class="text-white">{{ developerData.location }}</span>
+              </div>
+              <div class="flex items-center space-x-3">
+                <div class="w-2 h-2 bg-cyan-400 rounded-full"></div>
+                <span class="text-gray-400">Experience:</span>
+                <span class="text-white">{{ developerData.experience }}</span>
+              </div>
+            </div>
+
+            <!-- Bio -->
+            <p class="text-gray-300 text-sm md:text-base leading-relaxed">
+              {{ developerData.bio }}
+            </p>
+
+            <!-- Skills -->
+            <div class="pt-3">
+              <h4 class="text-lg font-semibold text-white mb-3">Core Skills</h4>
+              <div class="flex flex-wrap gap-2">
+                <span
+                  v-for="skill in developerData.skills"
+                  :key="skill"
+                  class="px-3 py-1 bg-emerald-400/10 border border-emerald-500/30 rounded-full text-sm text-emerald-300 hover:bg-emerald-500/20 transition"
+                >
+                  {{ skill }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Contact -->
+            <div class="pt-6 text-sm space-y-2">
+              <div class="flex items-center space-x-3">
+                <i class="text-emerald-400">📧</i>
+                <span class="text-gray-300">{{ developerData.email }}</span>
+              </div>
+              <div class="flex items-center space-x-3">
+                <i class="text-cyan-400">📱</i>
+                <span class="text-gray-300">{{ developerData.phone }}</span>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
 
+
+      </div>
+    </div>
+  </section>
     <!-- Contact Section -->
     <section id="contact" ref="contact" class="relative z-10 py-20 px-4">
       <div class="max-w-4xl mx-auto">
@@ -273,49 +400,126 @@ const techLogos = ref<HTMLElement[]>([])
 const pricing = ref<HTMLElement>()
 const pricingCards = ref<HTMLElement[]>([])
 const team = ref<HTMLElement>()
-const teamCards = ref<HTMLElement[]>([])
+const teamCards = ref<HTMLElement>()
 const contact = ref<HTMLElement>()
 const contactForm = ref<HTMLElement>()
 const scrollToTop = ref<HTMLElement>()
 const particles = ref<HTMLElement>()
+const developerCard = ref(null);
+
+// Section scrolling state
+const currentSectionIndex = ref(0)
+const isScrolling = ref(false)
+const sections = ['hero', 'services', 'techStack', 'pricing', 'team', 'contact']
 
 // Data
 const servicesData = [
   {
-    icon: '🎓',
+    svg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 14l9-5-9-5-9 5 9 5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
     title: 'Learning Management',
     description: 'Custom eLearning and LMS Platforms tailored for modern educational needs with interactive features.'
   },
   {
-    icon: '⚡',
+    svg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
     title: 'Utility Systems',
     description: 'Enterprise Utility Management Platforms based on Oracle OUAF features for optimal resource management.'
   },
   {
-    icon: '💳',
+    svg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="1" y="3" width="15" height="13" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
+      <path d="M16 8l4-4m0 0l4 4m-4-4v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M1 9h15" stroke="currentColor" stroke-width="2"/>
+    </svg>`,
     title: 'Billing Systems',
     description: 'Smart Billing and Customer Care Systems inspired by Oracle CCB concepts for seamless operations.'
   },
   {
-    icon: '🗺️',
+    svg: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+      <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M16 8l-3-3 3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
     title: 'Geomapping Services',
     description: 'Geospatial Hazard & Infrastructure Mapping Tools inspired by Project NOAH and Hazard.ph initiatives.'
   }
 ]
 
 const technologiesData = [
-  { name: 'C#', icon: '#' },
-  { name: 'Laravel', icon: '🚀' },
-  { name: 'Vue.js', icon: '💚' },
-  { name: 'React', icon: '⚛️' },
-  { name: 'Node.js', icon: '🟢' },
-  { name: 'DigitalOcean', icon: '🌊' },
-  { name: 'PHP', icon: '🐘' },
-  { name: 'MySQL', icon: '🗄️' },
-  { name: 'Oracle SQL', icon: '🔴' },
-  { name: 'Oracle CCS', icon: '☁️' },
-  { name: 'Oracle OIC', icon: '🔗' },
-  { name: 'Oracle OFS', icon: '💼' }
+  { 
+    name: 'C#', 
+    logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/csharp/csharp-original.svg',
+    category: 'Language'
+  },
+  { 
+    name: 'Laravel', 
+    logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/laravel/laravel-original.svg',
+    category: 'Framework'
+  },
+  { 
+    name: 'Vue.js', 
+    logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vuejs/vuejs-original.svg',
+    category: 'Frontend'
+  },
+  { 
+    name: 'React', 
+    logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg',
+    category: 'Frontend'
+  },
+  { 
+    name: 'Node.js', 
+    logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg',
+    category: 'Runtime'
+  },
+  { 
+    name: 'DigitalOcean', 
+    logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/digitalocean/digitalocean-original.svg',
+    category: 'Cloud'
+  },
+  { 
+    name: 'PHP', 
+    logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/php/php-original.svg',
+    category: 'Backend'
+  },
+  { 
+    name: 'MySQL', 
+    logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg',
+    category: 'Database'
+  },
+  { 
+    name: 'Oracle SQL', 
+    logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/oracle/oracle-original.svg',
+    category: 'Database'
+  },
+  { 
+    name: 'Oracle CCS', 
+    logo: 'https://cdn.worldvectorlogo.com/logos/oracle-6.svg',
+    category: 'Cloud Service'
+  },
+  { 
+    name: 'Oracle Integration Cloud', 
+    logo: 'https://cdn.worldvectorlogo.com/logos/oracle-6.svg',
+    category: 'Integration'
+  },
+  { 
+    name: 'Oracle OCI', 
+    logo: 'https://cdn.worldvectorlogo.com/logos/oracle-6.svg',
+    category: 'Cloud Infrastructure'
+  },
+  { 
+    name: 'Oracle Field Service', 
+    logo: 'https://cdn.worldvectorlogo.com/logos/oracle-6.svg',
+    category: 'Field Service'
+  },
+  { 
+    name: 'Oracle CC&B', 
+    logo: 'https://cdn.worldvectorlogo.com/logos/oracle-6.svg',
+    category: 'Utilities'
+  }
 ]
 
 const pricingPlansData = [
@@ -362,39 +566,27 @@ const pricingPlansData = [
   }
 ]
 
-const teamMembersData = [
-  {
-    name: 'Alex Chen',
-    role: 'CEO & Founder',
-    initials: 'AC',
-    funFact: 'Codes with bacon-themed variable names'
-  },
-  {
-    name: 'Sarah Kim',
-    role: 'CTO',
-    initials: 'SK',
-    funFact: 'Can debug while eating actual bacon'
-  },
-  {
-    name: 'Mike Rodriguez',
-    role: 'Lead Engineer',
-    initials: 'MR',
-    funFact: 'Built our first system on a bacon budget'
-  },
-  {
-    name: 'Emma Thompson',
-    role: 'UX Designer',
-    initials: 'ET',
-    funFact: 'Designs interfaces as crispy as bacon'
-  },
-  {
-    name: 'David Park',
-    role: 'Cloud Architect',
-    initials: 'DP',
-    funFact: 'Scales systems faster than bacon cooks'
-  }
-]
-
+const developerData = {
+  name: "John Bacon",
+  title: "Full Stack Engineer",
+  subtitle: "Building enterprise systems and cloud-integrated solutions.",
+  location: "Manila, Philippines",
+  experience: "8+ Years",
+  bio: "Bacon is a passionate full-stack developer specializing in enterprise-grade development of usable systems. He blends creativity and precision to build digital solutions for complex business ecosystems.",
+  avatar: "/images/developer-avatar.jpg",
+  email: "john@baconologies.com",
+  phone: "+63 *** *** ****",
+  skills: [
+    "Laravel",
+    "Vue.js",
+    "TailwindCSS",
+    "Node.js",
+    "Oracle SQL",
+    "DigitalOcean",
+    "React",
+    "GSAP",
+  ],
+};
 // Methods
 const toggleDarkMode = () => {
   // Dark mode is already default, but this could toggle light mode
@@ -422,12 +614,71 @@ const scrollToServices = () => {
 const scrollToSection = (sectionId: string) => {
   const element = document.getElementById(sectionId)
   if (element) {
+    isScrolling.value = true
     gsap.to(window, {
-      duration: 1.2,
-      scrollTo: { y: element, offsetY: -100, autoKill: false },
-      ease: "power2.inOut"
+      duration: 0.8,
+      scrollTo: { y: element, offsetY: -50, autoKill: false },
+      ease: "power3.inOut",
+      onComplete: () => {
+        setTimeout(() => {
+          isScrolling.value = false
+        }, 100)
+      }
     })
   }
+}
+
+const getCurrentSectionIndex = () => {
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+  const windowHeight = window.innerHeight
+  
+  for (let i = 0; i < sections.length; i++) {
+    const element = document.getElementById(sections[i])
+    if (element) {
+      const rect = element.getBoundingClientRect()
+      const elementTop = rect.top + scrollTop
+      
+      if (scrollTop >= elementTop - windowHeight / 2 && 
+          scrollTop < elementTop + rect.height - windowHeight / 2) {
+        return i
+      }
+    }
+  }
+  return 0
+}
+
+const scrollToNextSection = (direction: 'up' | 'down') => {
+  if (isScrolling.value) return
+  
+  // Update current section based on actual scroll position
+  currentSectionIndex.value = getCurrentSectionIndex()
+  
+  const newIndex = direction === 'down' 
+    ? Math.min(currentSectionIndex.value + 1, sections.length - 1)
+    : Math.max(currentSectionIndex.value - 1, 0)
+  
+  if (newIndex !== currentSectionIndex.value) {
+    currentSectionIndex.value = newIndex
+    scrollToSection(sections[newIndex])
+  }
+}
+
+let wheelTimeout: number | null = null
+
+const handleWheelScroll = (event: WheelEvent) => {
+  event.preventDefault()
+  
+  if (isScrolling.value) return
+  
+  // Debounce wheel events
+  if (wheelTimeout) {
+    clearTimeout(wheelTimeout)
+  }
+  
+  wheelTimeout = setTimeout(() => {
+    const direction = event.deltaY > 0 ? 'down' : 'up'
+    scrollToNextSection(direction)
+  }, 50)
 }
 
 // Animation functions
@@ -495,20 +746,40 @@ const initAnimations = () => {
     }, "-=0.5")
   }
 
-  // Service cards animation
+  // Service items animation
   if (serviceCards.value.length > 0 && services.value) {
-    gsap.set(serviceCards.value, { opacity: 0, y: 100, rotation: 5 })
+    gsap.set(serviceCards.value, { 
+      opacity: 0, 
+      y: 80, 
+      scale: 0.8,
+      filter: "blur(10px)" 
+    })
+    
     ScrollTrigger.create({
       trigger: services.value,
-      start: "top 80%",
+      start: "top 70%",
       onEnter: () => {
         gsap.to(serviceCards.value, {
           opacity: 1,
           y: 0,
-          rotation: 0,
-          duration: 1,
-          stagger: 0.2,
+          scale: 1,
+          filter: "blur(0px)",
+          duration: 1.2,
+          stagger: 0.15,
           ease: "power3.out"
+        })
+        
+        // Animate SVG icons with initial visibility
+        const svgIcons = serviceCards.value.map(card => card.querySelector('svg'))
+        gsap.set(svgIcons, { opacity: 1, scale: 1 })
+        gsap.from(svgIcons, {
+          scale: 0.3,
+          rotation: -90,
+          opacity: 0,
+          duration: 0.8,
+          stagger: 0.1,
+          ease: "back.out(1.7)",
+          delay: 0.4
         })
       }
     })
@@ -552,21 +823,22 @@ const initAnimations = () => {
     })
   }
 
-  // Team cards animation
-  if (teamCards.value.length > 0 && team.value) {
-    gsap.set(teamCards.value, { opacity: 0, y: 80, rotation: -10 })
+  // Team card animation
+  if (teamCards.value && team.value) {
+    gsap.set(teamCards.value, { opacity: 0, y: 80, scale: 0.8 })
     ScrollTrigger.create({
       trigger: team.value,
       start: "top 80%",
       onEnter: () => {
-        gsap.to(teamCards.value, {
-          opacity: 1,
-          y: 0,
-          rotation: 0,
-          duration: 1,
-          stagger: 0.15,
-          ease: "power2.out"
-        })
+        if (teamCards.value) {
+          gsap.to(teamCards.value, {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 1.2,
+            ease: "back.out(1.7)"
+          })
+        }
       }
     })
   }
@@ -626,13 +898,34 @@ onMounted(() => {
       initAnimations()
       console.log('Animations initialized!')
     }, 200)
-  })
+  });
+  
+  // Add wheel event listener for section scrolling
+  window.addEventListener('wheel', handleWheelScroll, { passive: false })
+  
+  gsap.from(developerCard.value, {
+    duration: 1.8,
+    x: 300,
+    y: -300,
+    opacity: 0,
+    rotate: 8,
+    ease: "power3.out",
+  });
+  gsap.to(developerCard.value, {
+    duration: 1,
+    rotate: 0,
+    delay: 1.8,
+    ease: "back.out(1.7)",
+  });
 })
 
 onBeforeUnmount(() => {
   // Clean up GSAP animations and ScrollTriggers
   ScrollTrigger.getAll().forEach(trigger => trigger.kill())
   gsap.killTweensOf("*")
+  
+  // Remove wheel event listener
+  window.removeEventListener('wheel', handleWheelScroll)
 })
 </script>
 
