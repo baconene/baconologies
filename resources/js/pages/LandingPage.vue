@@ -801,6 +801,10 @@ const initAnimations = () => {
 
 onMounted(() => {
   console.log('Landing page mounted, initializing...')
+  
+  // Ensure page starts at top
+  window.scrollTo(0, 0)
+  
   nextTick(() => {
     setTimeout(() => {
       createParticles()
@@ -844,5 +848,10 @@ onBeforeUnmount(() => {
   25% { transform: translateY(-20px) translateX(10px); }
   50% { transform: translateY(-10px) translateX(-10px); }
   75% { transform: translateY(-30px) translateX(5px); }
+}
+
+/* Prevent auto-scroll to anchors on page load */
+html {
+  scroll-behavior: auto;
 }
 </style>
