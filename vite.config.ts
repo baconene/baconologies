@@ -24,4 +24,11 @@ export default defineConfig({
             },
         }),
     ],
+    server: {
+        host: '0.0.0.0', // Listen on all network interfaces
+        port: 5173,
+        hmr: { host: '192.168.1.5', // Replace with your actual local IP
+        },
+    },
 });
+
