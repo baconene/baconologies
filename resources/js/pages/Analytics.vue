@@ -352,13 +352,13 @@
                 </thead>
                 <tbody>
                   <tr 
-                    v-for="visitor in visitors?.data || []" 
+                    v-for="visitor in getVisitorsList" 
                     :key="visitor.id"
                     class="border-b border-gray-800 hover:bg-white/5 transition-colors cursor-pointer"
                     @click="selectVisitor(visitor)"
                   >
                     <td class="py-4 text-white">{{ visitor.ip_address }}</td>
-                    <td class="py-4 text-gray-300">{{ visitor.location || 'Unknown' }}</td>
+                    <td class="py-4 text-gray-300">{{ formatLocation(visitor) }}</td>
                     <td class="py-4">
                       <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-500/20 text-blue-400">
                         {{ visitor.device_type }}
@@ -381,21 +381,21 @@
             </div>
 
             <!-- Pagination -->
-            <div class="flex justify-between items-center mt-6" v-if="visitors?.total">
+            <div class="flex justify-between items-center mt-6" v-if="getVisitorsPagination?.total">
               <div class="text-gray-300">
-                Showing {{ visitors.from || 0 }}-{{ visitors.to || 0 }} of {{ visitors.total }}
+                Showing {{ getVisitorsPagination.from || 0 }}-{{ getVisitorsPagination.to || 0 }} of {{ getVisitorsPagination.total }}
               </div>
               <div class="flex space-x-2">
                 <Link 
-                  v-if="visitors.prev_page_url"
-                  :href="visitors.prev_page_url"
+                  v-if="getVisitorsPagination.prev_page_url"
+                  :href="getVisitorsPagination.prev_page_url"
                   class="px-3 py-2 bg-gray-700 text-white hover:bg-gray-600 rounded-lg transition-colors"
                 >
                   Previous
                 </Link>
                 <Link 
-                  v-if="visitors.next_page_url"
-                  :href="visitors.next_page_url"
+                  v-if="getVisitorsPagination.next_page_url"
+                  :href="getVisitorsPagination.next_page_url"
                   class="px-3 py-2 bg-gray-700 text-white hover:bg-gray-600 rounded-lg transition-colors"
                 >
                   Next
@@ -458,7 +458,7 @@
         
         <div class="grid grid-cols-2 gap-4 text-sm">
           <div><span class="text-gray-400">IP Address:</span> <span class="text-white">{{ selectedVisitor.ip_address }}</span></div>
-          <div><span class="text-gray-400">Location:</span> <span class="text-white">{{ selectedVisitor.location || 'Unknown' }}</span></div>
+          <div><span class="text-gray-400">Location:</span> <span class="text-white">{{ formatLocation(selectedVisitor) }}</span></div>
           <div><span class="text-gray-400">Device:</span> <span class="text-white">{{ selectedVisitor.device_type }}</span></div>
           <div><span class="text-gray-400">Browser:</span> <span class="text-white">{{ selectedVisitor.browser_name }} {{ selectedVisitor.browser_version }}</span></div>
           <div><span class="text-gray-400">OS:</span> <span class="text-white">{{ selectedVisitor.os_name }} {{ selectedVisitor.os_version }}</span></div>
@@ -510,10 +510,16 @@ interface PaginatedVisitors {
   next_page_url?: string
 }
 
+interface DailyVisit {
+  date: string
+  count?: number
+  visitors?: number
+}
+
 const props = defineProps<{
   stats?: Stats
   visitors?: PaginatedVisitors | Visitor[]
-  dailyVisits?: Array<{date: string, count: number}>
+  dailyVisits?: DailyVisit[]
   deviceBreakdown?: Array<{device: string, count: number}>
   activeView?: string
 }>()
@@ -560,9 +566,35 @@ const currentViewDescription = computed(() => {
   }
 })
 
+// Helper functions for type safety
+const isPaginatedVisitors = (visitors: any): visitors is PaginatedVisitors => {
+  return visitors && typeof visitors === 'object' && 'data' in visitors
+}
+
+const getVisitorsList = computed(() => {
+  if (!props.visitors) return []
+  return isPaginatedVisitors(props.visitors) ? props.visitors.data : props.visitors
+})
+
+const getVisitorsPagination = computed(() => {
+  if (!props.visitors || !isPaginatedVisitors(props.visitors)) return null
+  return props.visitors
+})
+
 // Methods
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleString()
+}
+
+const formatLocation = (visitor: any) => {
+  if (visitor.location) return visitor.location
+  
+  const parts = []
+  if (visitor.city) parts.push(visitor.city)
+  if (visitor.region && visitor.region !== visitor.city) parts.push(visitor.region)
+  if (visitor.country) parts.push(visitor.country)
+  
+  return parts.length > 0 ? parts.join(', ') : 'Unknown'
 }
 
 const refreshData = async () => {
