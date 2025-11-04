@@ -10,6 +10,7 @@
           <a href="#hero" class="text-gray-300/80 hover:text-pink-400 transition-colors duration-300 text-sm font-medium">Home</a>
           <a href="#services" class="text-gray-300/80 hover:text-blue-400 transition-colors duration-300 text-sm font-medium">Services</a>
           <a href="#contact" class="text-gray-300/80 hover:text-orange-400 transition-colors duration-300 text-sm font-medium">Contact</a>
+          <Link href="/login" class="text-gray-300/80 hover:text-green-400 transition-colors duration-300 text-sm font-medium">Analytics</Link>
         </div>
       </div>
     </nav>
@@ -381,6 +382,7 @@
 import { ref, onMounted, nextTick, onBeforeUnmount } from 'vue'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { Link } from '@inertiajs/vue3'
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger)
