@@ -472,7 +472,7 @@
 </template>
 
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3'
+import { Link, router } from '@inertiajs/vue3'
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
 import Chart from 'chart.js/auto'
 
@@ -599,11 +599,32 @@ const formatLocation = (visitor: any) => {
 
 const refreshData = async () => {
   isRefreshing.value = true
-  // Simulate refresh - in real app, you'd reload data from server
-  setTimeout(() => {
+  try {
+    // Reload the entire page data
+    await router.reload({ only: ['stats', 'visitors', 'dailyVisits', 'deviceBreakdown'] })
+  } catch (error) {
+    console.error('Failed to refresh data:', error)
+  } finally {
     isRefreshing.value = false
-    // You can use Inertia.reload() here or make an API call
-  }, 1000)
+  }
+}
+
+const fetchRealTimeStats = async () => {
+  try {
+    const response = await fetch('/analytics/real-time-stats')
+    const data = await response.json()
+    
+    // Update the stats object
+    if (props.stats) {
+      Object.assign(props.stats, {
+        online_visitors: data.online_visitors,
+        todays_visitors: data.todays_visitors,
+        total_visitors: data.total_visitors
+      })
+    }
+  } catch (error) {
+    console.error('Failed to fetch real-time stats:', error)
+  }
 }
 
 const applyDateFilter = () => {
@@ -850,9 +871,8 @@ const renderCharts = () => {
   }
 }
 
-const updateLiveVisitors = () => {
-  // Simulate live visitor count updates
-  liveVisitors.value = Math.floor(Math.random() * 10) + 1
+const updateLiveVisitors = async () => {
+  await fetchRealTimeStats()
 }
 
 // Watch for view changes to re-render charts

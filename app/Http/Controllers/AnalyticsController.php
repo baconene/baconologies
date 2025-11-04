@@ -112,7 +112,7 @@ class AnalyticsController extends Controller
             'todays_visitors' => Visitor::nonBots()->whereDate('created_at', $today)->count(),
             'weekly_visitors' => Visitor::nonBots()->where('created_at', '>=', $thisWeek)->count(),
             'monthly_visitors' => Visitor::nonBots()->where('created_at', '>=', $thisMonth)->count(),
-            'online_visitors' => Visitor::nonBots()->where('last_activity', '>=', Carbon::now()->subMinutes(5))->count(),
+            'online_visitors' => Visitor::nonBots()->where('last_activity', '>=', Carbon::now()->subMinutes(15))->count(),
             'top_countries' => Visitor::nonBots()
                 ->whereNotNull('country')
                 ->select('country', DB::raw('COUNT(*) as count'))
@@ -297,5 +297,17 @@ class AnalyticsController extends Controller
         $singlePageVisitors = Visitor::nonBots()->where('page_views', 1)->count();
         
         return $totalVisitors > 0 ? round(($singlePageVisitors / $totalVisitors) * 100, 1) : 0;
+    }
+
+    public function getRealTimeStats()
+    {
+        $stats = [
+            'online_visitors' => Visitor::nonBots()->where('last_activity', '>=', Carbon::now()->subMinutes(15))->count(),
+            'todays_visitors' => Visitor::nonBots()->whereDate('created_at', Carbon::today())->count(),
+            'total_visitors' => Visitor::nonBots()->count(),
+            'last_updated' => Carbon::now()->toISOString()
+        ];
+
+        return response()->json($stats);
     }
 }

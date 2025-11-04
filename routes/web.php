@@ -26,6 +26,7 @@ Route::middleware(['auth', 'verified'])->prefix('analytics')->group(function () 
     Route::get('/', [AnalyticsController::class, 'index'])->name('analytics.dashboard');
     Route::get('/visitors', [AnalyticsController::class, 'visitors'])->name('analytics.visitors');
     Route::get('/charts', [AnalyticsController::class, 'charts'])->name('analytics.charts');
+    Route::get('/real-time-stats', [AnalyticsController::class, 'getRealTimeStats'])->name('analytics.realtime');
 });
 
 require __DIR__.'/settings.php';
