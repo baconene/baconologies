@@ -329,6 +329,31 @@ onMounted(() => {
             { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 1.1, ease: 'elastic.out(1, 0.5)' },
             '+=0.25',
         )
+
+    // ── ANYA CHARACTER ───────────────────────────────────────────────────
+    gsap.fromTo('.anya-char',
+        { opacity: 0, y: 50, scale: 0.75 },
+        { opacity: 1, y: 0, scale: 1, duration: 1, delay: 3.8, ease: 'back.out(1.6)' },
+    )
+    gsap.fromTo('.anya-bubble',
+        { opacity: 0, scale: 0, transformOrigin: 'bottom right' },
+        { opacity: 1, scale: 1, duration: 0.45, delay: 5.0, ease: 'back.out(2.2)' },
+    )
+    gsap.to('.anya-char', { y: '-=12', duration: 1.9, repeat: -1, yoyo: true, ease: 'sine.inOut', delay: 5 })
+    gsap.to('.anya-char', { rotation: 1.5, duration: 2.4, repeat: -1, yoyo: true, ease: 'sine.inOut', delay: 5.5 })
+
+    // ── YOR CHARACTER ────────────────────────────────────────────────────
+    ScrollTrigger.create({
+        trigger: '.ending-section', start: 'top 78%', once: true,
+        onEnter: () => {
+            gsap.fromTo('.yor-char',
+                { opacity: 0, x: -55, scale: 0.85 },
+                { opacity: 1, x: 0, scale: 1, duration: 1.1, ease: 'power3.out' },
+            )
+            gsap.to('.yor-char', { y: '-=9', duration: 2.3, repeat: -1, yoyo: true, ease: 'sine.inOut', delay: 1.2 })
+            gsap.to('.yor-char', { rotation: -1.2, duration: 2.8, repeat: -1, yoyo: true, ease: 'sine.inOut', delay: 1.8 })
+        },
+    })
 })
 
 onUnmounted(() => {
@@ -438,6 +463,72 @@ onUnmounted(() => {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </div>
+            </div>
+
+            <!-- ✦ ANYA — She already knew ✦ -->
+            <div class="absolute bottom-0 right-0 md:right-6 z-20 pointer-events-none flex flex-col items-end select-none">
+                <!-- Speech bubble -->
+                <div class="anya-bubble opacity-0 mr-8 md:mr-12 mb-1">
+                    <div class="relative bg-white text-gray-800 rounded-2xl rounded-br-sm px-3.5 py-2 shadow-xl"
+                         style="font-family: 'Comic Sans MS', 'Chalkboard SE', cursive; font-size: 13px; font-weight: 700; white-space: nowrap;">
+                        Heh. She knew.
+                        <span class="ml-1 text-sm">😏</span>
+                        <!-- Bubble tail pointing down-right -->
+                        <span class="absolute -bottom-2.5 right-4 w-0 h-0"
+                              style="border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 10px solid white;">
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Anya SVG -->
+                <svg class="anya-char w-28 md:w-40 lg:w-48 opacity-0 drop-shadow-2xl"
+                     viewBox="0 0 180 205" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;">
+                    <!-- Hair back layer -->
+                    <ellipse cx="90" cy="90" rx="74" ry="72" fill="#f5a0c5"/>
+                    <!-- Left pigtail -->
+                    <path d="M 24 125 C 4 148 6 190 18 205 C 28 214 46 210 48 198 C 38 182 36 156 44 138 Z" fill="#f5a0c5"/>
+                    <!-- Right pigtail -->
+                    <path d="M 156 125 C 176 148 174 190 162 205 C 152 214 134 210 132 198 C 142 182 144 156 136 138 Z" fill="#f5a0c5"/>
+                    <!-- Left hair clip (dark rect with lace-like bottom) -->
+                    <rect x="14" y="117" width="32" height="15" rx="2.5" fill="#1a1a2e"/>
+                    <path d="M14 129 L18 132 L22 129 L26 132 L30 129 L34 132 L38 129 L42 132 L46 129" stroke="white" stroke-width="0.9" fill="none" opacity="0.3" stroke-linecap="round"/>
+                    <!-- Right hair clip -->
+                    <rect x="134" y="117" width="32" height="15" rx="2.5" fill="#1a1a2e"/>
+                    <path d="M134 129 L138 132 L142 129 L146 132 L150 129 L154 132 L158 129 L162 132 L166 129" stroke="white" stroke-width="0.9" fill="none" opacity="0.3" stroke-linecap="round"/>
+                    <!-- Face -->
+                    <ellipse cx="90" cy="120" rx="64" ry="67" fill="#fde8d5"/>
+                    <!-- Hair front / bangs -->
+                    <path d="M 28 88 Q 32 48 90 44 Q 148 48 152 88 Q 136 68 90 66 Q 44 68 28 88 Z" fill="#f5a0c5"/>
+                    <!-- Ahoge (cowlick) -->
+                    <path d="M 87 44 C 82 18 90 7 90 5 C 90 7 98 18 93 44 Z" fill="#f5a0c5"/>
+                    <!-- Bang inner shadow -->
+                    <path d="M 28 88 C 40 76 54 82 60 92" fill="#e085b0" opacity="0.4"/>
+                    <path d="M 152 88 C 140 76 126 82 120 92" fill="#e085b0" opacity="0.4"/>
+                    <!-- LEFT EYE — narrow smug crescent -->
+                    <path d="M 54 112 Q 70 104 84 112 Q 70 122 54 114 Z" fill="#2a1f3d"/>
+                    <ellipse cx="71" cy="111" rx="3" ry="1.4" fill="white" opacity="0.22"/>
+                    <!-- RIGHT EYE — narrow smug crescent -->
+                    <path d="M 96 112 Q 112 104 126 112 Q 112 122 96 114 Z" fill="#2a1f3d"/>
+                    <ellipse cx="113" cy="111" rx="3" ry="1.4" fill="white" opacity="0.22"/>
+                    <!-- Blush -->
+                    <ellipse cx="64" cy="133" rx="16" ry="10.5" fill="#f0a0a0" opacity="0.2"/>
+                    <ellipse cx="116" cy="133" rx="16" ry="10.5" fill="#f0a0a0" opacity="0.2"/>
+                    <!-- Freckle dashes left (3 diagonal) -->
+                    <line x1="51" y1="126" x2="63" y2="123" stroke="#d48068" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="49" y1="133" x2="61" y2="130" stroke="#d48068" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="53" y1="140" x2="65" y2="137" stroke="#d48068" stroke-width="2" stroke-linecap="round"/>
+                    <!-- Freckle dashes right -->
+                    <line x1="117" y1="123" x2="129" y2="126" stroke="#d48068" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="119" y1="130" x2="131" y2="133" stroke="#d48068" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="115" y1="137" x2="127" y2="140" stroke="#d48068" stroke-width="2" stroke-linecap="round"/>
+                    <!-- Smug smile -->
+                    <path d="M 74 156 Q 90 170 106 156" stroke="#c46868" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                    <path d="M 78 159 Q 90 165 102 159" fill="#e8907a" opacity="0.42"/>
+                    <!-- Neck -->
+                    <path d="M 80 184 Q 83 198 90 200 Q 97 198 100 184 Z" fill="#fde8d5"/>
+                    <!-- Collar hint -->
+                    <path d="M 55 200 Q 90 208 125 200" stroke="white" stroke-width="2" fill="none" opacity="0.5" stroke-linecap="round"/>
+                </svg>
             </div>
         </section>
 
@@ -768,6 +859,66 @@ onUnmounted(() => {
                         </p>
                     </div>
                 </div>
+            </div>
+
+            <!-- ✦ YOR — Proud guardian watching over ✦ -->
+            <div class="yor-char absolute bottom-0 left-0 md:left-6 z-20 pointer-events-none opacity-0 select-none flex flex-col items-start">
+                <svg class="w-28 md:w-40 lg:w-44 drop-shadow-2xl"
+                     viewBox="0 0 180 215" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;">
+                    <!-- Hair back -->
+                    <ellipse cx="90" cy="85" rx="72" ry="70" fill="#1a1030"/>
+                    <!-- Side flowing strands -->
+                    <path d="M 22 105 C 7 135 9 168 17 180 C 23 188 35 184 37 174 C 28 158 26 132 34 115 Z" fill="#1a1030"/>
+                    <path d="M 158 105 C 173 135 171 168 163 180 C 157 188 145 184 143 174 C 152 158 154 132 146 115 Z" fill="#1a1030"/>
+                    <!-- Updo bun -->
+                    <ellipse cx="90" cy="36" rx="25" ry="22" fill="#1a1030"/>
+                    <ellipse cx="84" cy="30" rx="8" ry="5.5" fill="#2a1a44" opacity="0.5"/>
+                    <!-- Rose ornament -->
+                    <circle cx="116" cy="34" r="10" fill="#a82030"/>
+                    <path d="M 111 27 Q 116 20 121 27 Q 123 35 116 40 Q 109 35 111 27 Z" fill="#cc3848"/>
+                    <path d="M 112 32 Q 116 27 120 32 Q 121 38 116 40 Q 111 38 112 32 Z" fill="#e04858"/>
+                    <circle cx="116" cy="34" r="3.5" fill="#fee0e5"/>
+                    <path d="M 107 40 C 104 36 106 30 110 32" stroke="#2d5a20" stroke-width="1.4" fill="none" opacity="0.75"/>
+                    <path d="M 125 40 C 128 36 126 30 122 32" stroke="#2d5a20" stroke-width="1.4" fill="none" opacity="0.75"/>
+                    <!-- Face -->
+                    <ellipse cx="90" cy="124" rx="63" ry="68" fill="#fef3ee"/>
+                    <!-- Hair front strands -->
+                    <path d="M 30 90 Q 34 50 90 46 Q 146 50 150 90 Q 135 70 90 68 Q 45 70 30 90 Z" fill="#1a1030"/>
+                    <path d="M 30 90 C 38 75 52 80 56 96" fill="#241540" opacity="0.7"/>
+                    <path d="M 150 90 C 142 75 128 80 124 96" fill="#241540" opacity="0.7"/>
+                    <!-- LEFT EYE (large, crimson iris) -->
+                    <ellipse cx="68" cy="113" rx="15" ry="13" fill="white"/>
+                    <ellipse cx="68" cy="114" rx="10" ry="11" fill="#7a0018"/>
+                    <circle cx="68" cy="114" r="5.8" fill="#100008"/>
+                    <circle cx="73" cy="109" r="2.8" fill="white" opacity="0.92"/>
+                    <circle cx="65" cy="118" r="1.2" fill="white" opacity="0.5"/>
+                    <path d="M 53 106 Q 68 100 83 106" stroke="#100008" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                    <path d="M 54 124 Q 68 129 82 124" stroke="#100008" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+                    <!-- RIGHT EYE -->
+                    <ellipse cx="112" cy="113" rx="15" ry="13" fill="white"/>
+                    <ellipse cx="112" cy="114" rx="10" ry="11" fill="#7a0018"/>
+                    <circle cx="112" cy="114" r="5.8" fill="#100008"/>
+                    <circle cx="117" cy="109" r="2.8" fill="white" opacity="0.92"/>
+                    <circle cx="109" cy="118" r="1.2" fill="white" opacity="0.5"/>
+                    <path d="M 97 106 Q 112 100 127 106" stroke="#100008" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                    <path d="M 98 124 Q 112 129 126 124" stroke="#100008" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+                    <!-- Eyebrows -->
+                    <path d="M 53 100 Q 68 94 82 100" stroke="#100008" stroke-width="1.9" fill="none" stroke-linecap="round"/>
+                    <path d="M 98 100 Q 112 94 127 100" stroke="#100008" stroke-width="1.9" fill="none" stroke-linecap="round"/>
+                    <!-- Nose -->
+                    <path d="M 88 136 Q 90 141 92 136" stroke="#c4987a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+                    <!-- Smile (gentle, proud) -->
+                    <path d="M 76 156 Q 90 167 104 156" stroke="#b86060" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <path d="M 80 159 Q 90 165 100 159" fill="#e09080" opacity="0.35"/>
+                    <!-- Neck -->
+                    <path d="M 80 190 Q 83 206 90 208 Q 97 206 100 190 Z" fill="#fef3ee"/>
+                    <!-- Red dress collar -->
+                    <path d="M 40 210 Q 90 225 140 210 L 152 218 Q 90 238 28 218 Z" fill="#a82030" opacity="0.9"/>
+                    <path d="M 80 208 L 90 222 L 100 208" stroke="#100008" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+                    <path d="M 55 215 Q 90 222 125 215" stroke="#cc3848" stroke-width="1" fill="none" opacity="0.48"/>
+                </svg>
+                <!-- Small caption -->
+                <span class="text-[8px] tracking-[0.2em] text-amber-400/40 uppercase pl-2 mt-1">Support Team</span>
             </div>
         </section>
 
