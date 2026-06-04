@@ -15,6 +15,10 @@ Route::get('/demo', function () {
     return Inertia::render('DemoSystems');
 })->name('demo');
 
+Route::get('/ganbatteneMira', function () {
+    return Inertia::render('GanbatteneMira');
+})->name('ganbatteneMira');
+
 
 
 Route::get('dashboard', function () {
