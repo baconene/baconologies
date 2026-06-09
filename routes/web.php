@@ -19,6 +19,10 @@ Route::get('/ganbatteneMira', function () {
     return Inertia::render('GanbatteneMira');
 })->name('ganbatteneMira');
 
+Route::get('/sampleNWSForecast', function () {
+    return Inertia::render('SampleNWSForecast');
+})->name('sampleNWSForecast');
+
 
 
 Route::get('dashboard', function () {
