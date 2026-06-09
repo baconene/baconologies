@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NWS Forecast — Indianapolis, IN</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --sky:    #0a1628;
+      --card:   #0d1f3c;
+      --border: #1e3a5f;
+      --accent: #4fc3f7;
+      --warm:   #ff8a65;
+      --cool:   #64b5f6;
+      --green:  #66bb6a;
+      --text:   #e0f0ff;
+      --muted:  #7a9bbf;
+      --radius: 16px;
+    }
+
+    html, body {
+      min-height: 100%;
+      background: var(--sky);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    /* ── HEADER ── */
+    header {
+      padding: 48px 24px 24px;
+      text-align: center;
+      opacity: 0;
+    }
+    header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.8rem);
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--accent);
+    }
+    header p {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    #updated {
+      margin-top: 4px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* ── LOADING / ERROR ── */
+    #loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      padding: 80px 24px;
+    }
+    .spinner {
+      width: 48px; height: 48px;
+      border: 4px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #error-box {
+      display: none;
+      margin: 40px auto;
+      max-width: 480px;
+      background: #2d1515;
+      border: 1px solid #7b3535;
+      border-radius: var(--radius);
+      padding: 24px;
+      text-align: center;
+      color: #ff8a8a;
+    }
+
+    /* ── MAIN GRID ── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    /* ── CURRENT CONDITIONS STRIP ── */
+    #current-strip {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 32px;
+      opacity: 0;
+    }
+    .stat-card {
+      flex: 1 1 140px;
+      max-width: 200px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 16px;
+      text-align: center;
+    }
+    .stat-card .label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .stat-card .value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .stat-card .sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ── CHARTS ── */
+    .chart-section {
+      opacity: 0;
+      margin-bottom: 28px;
+    }
+    .chart-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .chart-card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 18px;
+      color: var(--accent);
+      letter-spacing: 0.3px;
+    }
+    .chart-wrap {
+      position: relative;
+      height: 220px;
+    }
+
+    /* ── 7-DAY FORECAST CARDS ── */
+    #daily-section {
+      opacity: 0;
+    }
+    #daily-section h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 14px;
+      letter-spacing: 0.3px;
+    }
+    #daily-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 10px;
+    }
+    .day-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 12px;
+      text-align: center;
+      cursor: default;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .day-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+    }
+    .day-card .day-name {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .day-card .day-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+      line-height: 1;
+    }
+    .day-card .day-temp {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    .day-card .day-temp.hot  { color: var(--warm); }
+    .day-card .day-temp.cool { color: var(--cool); }
+    .day-card .day-wind {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+    .day-card .day-short {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 4px;
+      line-height: 1.3;
+    }
+
+    /* ── ALERTS BANNER ── */
+    #alerts-section {
+      display: none;
+      margin-bottom: 28px;
+      opacity: 0;
+    }
+    .alert-banner {
+      background: #2a1500;
+      border: 1px solid #ff8a00;
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      color: #ffcc80;
+      font-size: 0.9rem;
+    }
+    .alert-banner strong { color: #ff8a00; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .chart-wrap { height: 180px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header id="page-header">
+    <h1>📡 NWS Forecast</h1>
+    <p>Indianapolis, IN &nbsp;·&nbsp; 39.9681°N, 86.1125°W</p>
+    <p id="updated"></p>
+  </header>
+
+  <main>
+    <div id="loading">
+      <div class="spinner"></div>
+      <p style="color:var(--muted)">Fetching forecast data…</p>
+    </div>
+
+    <div id="error-box">
+      <strong>⚠ Could not load forecast</strong>
+      <p id="error-msg" style="margin-top:8px;font-size:0.85rem"></p>
+    </div>
+
+    <div id="alerts-section">
+      <div class="alert-banner" id="alerts-content"></div>
+    </div>
+
+    <!-- current snapshot -->
+    <div id="current-strip">
+      <div class="stat-card">
+        <div class="label">Now</div>
+        <div class="value" id="stat-temp">—</div>
+        <div class="sub" id="stat-desc">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Wind</div>
+        <div class="value" id="stat-wind">—</div>
+        <div class="sub" id="stat-wind-dir">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Humidity</div>
+        <div class="value" id="stat-humidity">—</div>
+        <div class="sub">relative</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Precip chance</div>
+        <div class="value" id="stat-precip">—</div>
+        <div class="sub">next period</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Visibility</div>
+        <div class="value" id="stat-vis">—</div>
+        <div class="sub">miles</div>
+      </div>
+    </div>
+
+    <!-- hourly temp chart -->
+    <div class="chart-section" id="sec-temp">
+      <div class="chart-card">
+        <h2>🌡 Temperature — Next 24 hrs (°F)</h2>
+        <div class="chart-wrap"><canvas id="chart-temp"></canvas></div>
+      </div>
+    </div>
+
+    <!-- precipitation chart -->
+    <div class="chart-section" id="sec-precip">
+      <div class="chart-card">
+        <h2>🌧 Precipitation Probability — Next 24 hrs (%)</h2>
+        <div class="chart-wrap"><canvas id="chart-precip"></canvas></div>
+      </div>
+    </div>
+
+    <!-- wind chart -->
+    <div class="chart-section" id="sec-wind">
+      <div class="chart-card">
+        <h2>💨 Wind Speed — Next 24 hrs (mph)</h2>
+        <div class="chart-wrap"><canvas id="chart-wind"></canvas></div>
+      </div>
+    </div>
+
+    <!-- 7-day -->
+    <div id="daily-section">
+      <h2>📅 7-Day Forecast</h2>
+      <div id="daily-grid"></div>
+    </div>
+  </main>
+
+<script>
+/* ────────────────────────────────────────────────────────────────
+   CONFIG
+──────────────────────────────────────────────────────────────── */
+const LAT  = 39.9681;
+const LON  = -86.1125;
+const HEADERS = {
+  'User-Agent': '(baconologies weather page, john.adrian.bacon@gmail.com)',
+  'Accept': 'application/geo+json',
+};
+
+/* ────────────────────────────────────────────────────────────────
+   HELPERS
+──────────────────────────────────────────────────────────────── */
+async function apiFetch(url) {
+  const res = await fetch(url, { headers: HEADERS });
+  if (!res.ok) throw new Error(`HTTP ${res.status} — ${url}`);
+  return res.json();
+}
+
+function weatherIcon(shortForecast = '', isDaytime = true) {
+  const s = shortForecast.toLowerCase();
+  if (s.includes('thunder'))            return '⛈';
+  if (s.includes('snow') || s.includes('blizzard')) return '❄️';
+  if (s.includes('sleet') || s.includes('freezing rain')) return '🌨';
+  if (s.includes('rain') || s.includes('shower'))  return '🌧';
+  if (s.includes('drizzle'))            return '🌦';
+  if (s.includes('fog') || s.includes('mist'))     return '🌫';
+  if (s.includes('cloud') || s.includes('overcast')) return isDaytime ? '⛅' : '🌑';
+  if (s.includes('partly'))            return isDaytime ? '⛅' : '🌤';
+  if (s.includes('sunny') || s.includes('clear'))  return isDaytime ? '☀️' : '🌙';
+  if (s.includes('wind'))              return '💨';
+  return isDaytime ? '🌤' : '🌙';
+}
+
+function tempColor(f) {
+  return f >= 80 ? 'hot' : 'cool';
+}
+
+function fmtHour(isoString) {
+  const d = new Date(isoString);
+  return d.toLocaleTimeString([], { hour: 'numeric', hour12: true });
+}
+
+/* ────────────────────────────────────────────────────────────────
+   CHART DEFAULTS
+──────────────────────────────────────────────────────────────── */
+Chart.defaults.color = '#7a9bbf';
+Chart.defaults.borderColor = '#1e3a5f';
+Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
+
+function makeLineChart(id, labels, data, color, fillColor, yLabel) {
+  return new Chart(document.getElementById(id), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        borderColor: color,
+        backgroundColor: fillColor,
+        borderWidth: 2.5,
+        pointRadius: 3,
+        pointBackgroundColor: color,
+        fill: true,
+        tension: 0.4,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 0 }, // GSAP handles reveal
+      plugins: { legend: { display: false }, tooltip: {
+        callbacks: { label: ctx => ` ${ctx.parsed.y}${yLabel}` },
+      }},
+      scales: {
+        x: { grid: { color: '#1e3a5f' }, ticks: { maxRotation: 45, font: { size: 11 } } },
+        y: { grid: { color: '#1e3a5f' }, ticks: { font: { size: 11 } } },
+      },
+    },
+  });
+}
+
+function makePrecipChart(id, labels, data) {
+  return new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: data.map(v =>
+          v >= 70 ? 'rgba(100,181,246,0.85)' :
+          v >= 40 ? 'rgba(100,181,246,0.55)' :
+                    'rgba(100,181,246,0.25)'
+        ),
+        borderColor: 'rgba(100,181,246,0.8)',
+        borderWidth: 1,
+        borderRadius: 4,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 0 },
+      plugins: { legend: { display: false }, tooltip: {
+        callbacks: { label: ctx => ` ${ctx.parsed.y}%` },
+      }},
+      scales: {
+        x: { grid: { color: '#1e3a5f' }, ticks: { maxRotation: 45, font: { size: 11 } } },
+        y: { min: 0, max: 100, grid: { color: '#1e3a5f' }, ticks: { font: { size: 11 }, callback: v => v + '%' } },
+      },
+    },
+  });
+}
+
+/* ────────────────────────────────────────────────────────────────
+   GSAP ANIMATIONS
+──────────────────────────────────────────────────────────────── */
+function animateIn() {
+  const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+  tl.to('#page-header',    { opacity: 1, y: 0, duration: 0.7, from: { y: -30 } })
+    .to('#current-strip',  { opacity: 1, y: 0, duration: 0.6, from: { y: 20 } }, '-=0.3')
+    .to('#sec-temp',       { opacity: 1, y: 0, duration: 0.6, from: { y: 24 } }, '-=0.2')
+    .to('#sec-precip',     { opacity: 1, y: 0, duration: 0.6, from: { y: 24 } }, '-=0.3')
+    .to('#sec-wind',       { opacity: 1, y: 0, duration: 0.6, from: { y: 24 } }, '-=0.3')
+    .to('#daily-section',  { opacity: 1, y: 0, duration: 0.6, from: { y: 24 } }, '-=0.3');
+
+  // stagger daily cards once they exist
+  gsap.from('.day-card', {
+    opacity: 0, scale: 0.88, duration: 0.45,
+    stagger: 0.06, ease: 'back.out(1.4)', delay: 1.2,
+  });
+
+  // stagger stat cards
+  gsap.from('.stat-card', {
+    opacity: 0, y: 16, duration: 0.4,
+    stagger: 0.08, ease: 'power2.out', delay: 0.6,
+  });
+}
+
+/* ────────────────────────────────────────────────────────────────
+   MAIN
+──────────────────────────────────────────────────────────────── */
+async function loadForecast() {
+  try {
+    // 1 — points
+    const points = await apiFetch(`https://api.weather.gov/points/${LAT},${LON}`);
+    const { forecast: forecastUrl, forecastHourly: hourlyUrl } = points.properties;
+
+    // 2 — fetch daily + hourly in parallel
+    const [daily, hourly] = await Promise.all([
+      apiFetch(forecastUrl),
+      apiFetch(hourlyUrl),
+    ]);
+
+    const periods      = daily.properties.periods;    // ~14 periods
+    const hourlyPeriods = hourly.properties.periods;  // ~156 periods
+
+    // hide loader
+    document.getElementById('loading').style.display = 'none';
+
+    // updated time
+    const genTime = new Date(daily.properties.generatedAt);
+    document.getElementById('updated').textContent =
+      'Updated ' + genTime.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+
+    /* ── CURRENT STATS (first period + first hourly) ── */
+    const now  = periods[0];
+    const nowH = hourlyPeriods[0];
+
+    document.getElementById('stat-temp').textContent     = `${now.temperature}°`;
+    document.getElementById('stat-desc').textContent     = now.shortForecast;
+    document.getElementById('stat-wind').textContent     = now.windSpeed;
+    document.getElementById('stat-wind-dir').textContent = now.windDirection;
+
+    const precip = now.probabilityOfPrecipitation?.value ?? 0;
+    document.getElementById('stat-precip').textContent   = `${precip}%`;
+
+    const humidity = nowH?.relativeHumidity?.value;
+    document.getElementById('stat-humidity').textContent =
+      humidity != null ? `${Math.round(humidity)}%` : '—';
+
+    /* ── HOURLY DATA — next 24 periods ── */
+    const next24  = hourlyPeriods.slice(0, 24);
+    const hLabels = next24.map(p => fmtHour(p.startTime));
+    const hTemps  = next24.map(p => p.temperature);
+    const hPrecip = next24.map(p => p.probabilityOfPrecipitation?.value ?? 0);
+    const hWind   = next24.map(p => {
+      const m = (p.windSpeed || '').match(/(\d+)/);
+      return m ? parseInt(m[1]) : 0;
+    });
+
+    // visibility from first hourly (grid value, approximate)
+    const vis = nowH?.visibility?.value;
+    document.getElementById('stat-vis').textContent =
+      vis != null ? (vis / 1609.34).toFixed(1) : '—';
+
+    /* ── CHARTS ── */
+    makeLineChart(
+      'chart-temp', hLabels, hTemps,
+      '#ff8a65', 'rgba(255,138,101,0.15)', '°F'
+    );
+    makePrecipChart('chart-precip', hLabels, hPrecip);
+    makeLineChart(
+      'chart-wind', hLabels, hWind,
+      '#4fc3f7', 'rgba(79,195,247,0.12)', ' mph'
+    );
+
+    /* ── 7-DAY CARDS ── */
+    const grid = document.getElementById('daily-grid');
+    // use daytime periods only (skip overnight duplicates) — first 7 unique days
+    const dayPeriods = periods.filter(p => p.isDaytime).slice(0, 7);
+    // if not enough daytime, fill with all
+    const toRender = dayPeriods.length >= 4 ? dayPeriods : periods.slice(0, 7);
+
+    toRender.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'day-card';
+      const precP = p.probabilityOfPrecipitation?.value ?? 0;
+      card.innerHTML = `
+        <div class="day-name">${p.name}</div>
+        <div class="day-icon">${weatherIcon(p.shortForecast, p.isDaytime)}</div>
+        <div class="day-temp ${tempColor(p.temperature)}">${p.temperature}°${p.temperatureUnit}</div>
+        ${precP > 0 ? `<div class="day-wind">💧 ${precP}%</div>` : ''}
+        <div class="day-wind">${p.windSpeed} ${p.windDirection}</div>
+        <div class="day-short">${p.shortForecast}</div>
+      `;
+      grid.appendChild(card);
+    });
+
+    /* ── ALERTS (optional) ── */
+    try {
+      const alertsData = await apiFetch(
+        `https://api.weather.gov/alerts/active?point=${LAT},${LON}`
+      );
+      const active = alertsData.features ?? [];
+      if (active.length > 0) {
+        const sec = document.getElementById('alerts-section');
+        const box = document.getElementById('alerts-content');
+        box.innerHTML = active.map(a =>
+          `<strong>⚠ ${a.properties.headline}</strong><br>
+           <span style="font-size:0.82rem">${a.properties.description?.slice(0, 200) ?? ''}…</span>`
+        ).join('<hr style="border-color:#7b3535;margin:10px 0">');
+        sec.style.display = 'block';
+        gsap.to('#alerts-section', { opacity: 1, y: 0, duration: 0.5, from: { y: -10 } });
+      }
+    } catch { /* alerts are optional */ }
+
+    /* ── ANIMATE IN ── */
+    animateIn();
+
+  } catch (err) {
+    document.getElementById('loading').style.display = 'none';
+    const box = document.getElementById('error-box');
+    document.getElementById('error-msg').textContent = err.message;
+    box.style.display = 'block';
+    gsap.from(box, { opacity: 0, y: 20, duration: 0.5 });
+    console.error(err);
+  }
+}
+
+// initial state — everything invisible for GSAP to animate in
+gsap.set(['#page-header','#current-strip','#sec-temp','#sec-precip','#sec-wind','#daily-section'],
+  { opacity: 0, y: 0 });
+
+loadForecast();
+</script>
+</body>
+</html>
