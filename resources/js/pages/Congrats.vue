@@ -12,9 +12,12 @@ const heroTitle = ref<HTMLElement | null>(null)
 const stats = [
     { number: '4', label: 'Years of Study', suffix: '+' },
     { number: '100', label: 'Assignments Completed', suffix: '%' },
-    { number: '1', label: 'Degree Earned', suffix: '✓' },
+    { number: '2', label: 'Degree Earned', suffix: '✓' },
     { number: '∞', label: 'Lives to Impact', suffix: '' },
 ]
+
+const showCongratulationsModal = ref(true)
+let congratulationsTimeout: ReturnType<typeof setTimeout> | null = null
 
 const timeline = [
     { year: '2022', title: 'Enrollment', color: 'orange' },
@@ -169,7 +172,49 @@ onMounted(() => {
         { opacity: 0, y: 40 },
         { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', scrollTrigger: { trigger: '.closing-section', start: 'top 75%' } },
     )
+
+    // ── CONGRATULATIONS MODAL ───────────────────────────────────────────
+    if (showCongratulationsModal.value) {
+        gsap.fromTo('.congratulations-backdrop',
+            { opacity: 0 },
+            { opacity: 1, duration: 0.5, ease: 'power2.out' },
+        )
+
+        gsap.fromTo('.congratulations-modal',
+            { opacity: 0, scale: 0.3, rotation: -180, xPercent: -50, yPercent: -50 },
+            { opacity: 1, scale: 1, rotation: 0, duration: 0.8, ease: 'back.out(1.5)' },
+        )
+
+        const confettiElements = gsap.utils.toArray<HTMLElement>('.confetti')
+        confettiElements.forEach((conf, i) => {
+            const angle = (i / confettiElements.length) * Math.PI * 2
+            const velocity = 300 + Math.random() * 200
+            const vx = Math.cos(angle) * velocity
+            const vy = Math.sin(angle) * velocity - 200
+
+            gsap.to(conf, {
+                x: vx, y: vy, opacity: 0, rotation: 360,
+                duration: 2 + Math.random() * 1, ease: 'power1.out', delay: 0.3,
+            })
+        })
+
+        congratulationsTimeout = setTimeout(() => {
+            closeCongratulationsModal()
+        }, 10000)
+    }
 })
+
+function closeCongratulationsModal() {
+    gsap.to('.congratulations-backdrop', {
+        opacity: 0, duration: 0.4, ease: 'power2.in', onComplete: () => {
+            showCongratulationsModal.value = false
+        },
+    })
+    gsap.to('.congratulations-modal', {
+        opacity: 0, scale: 0.8, duration: 0.4, ease: 'power2.in',
+    })
+    if (congratulationsTimeout) clearTimeout(congratulationsTimeout)
+}
 
 onUnmounted(() => {
     ScrollTrigger.getAll().forEach((t) => t.kill())
@@ -182,6 +227,54 @@ onUnmounted(() => {
     <Head title="Agent Amira — BSSW Degree | Portfolio" />
 
     <div class="relative overflow-x-hidden bg-[#0a0815] text-white min-h-screen" style="font-family: 'Courier New', Courier, monospace;">
+
+        <!-- ══════════════════════════════════════════════════════════
+             CONGRATULATIONS MODAL
+        ══════════════════════════════════════════════════════════ -->
+        <div v-if="showCongratulationsModal"
+             class="congratulations-backdrop fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+
+            <!-- Modal Card -->
+            <div class="congratulations-modal relative max-w-md w-full"
+                 style="transform: translate(-50%, -50%); left: 50%; top: 50%;">
+
+                <!-- Close Button -->
+                <button @click="closeCongratulationsModal"
+                        class="absolute -top-3 -right-3 z-20 w-10 h-10 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center text-white font-bold transition-all duration-200"
+                        style="box-shadow: 0 0 20px rgba(34,197,94,.5);">
+                    ✕
+                </button>
+
+                <!-- Image -->
+                <div class="rounded-2xl overflow-hidden border-2 border-green-400/40 shadow-2xl relative">
+                    <img src="/images/5826936767401675501.jpg" alt="Congratulations"
+                         class="w-full h-auto object-cover block">
+                </div>
+
+                <!-- Title -->
+                <div class="text-center mt-6 mb-4">
+                    <h2 class="text-3xl md:text-4xl font-black text-white mb-2"
+                        style="text-shadow: 0 0 20px rgba(34,197,94,.4);">
+                        Congratulations!
+                    </h2>
+                    <p class="text-sm md:text-base text-white/70 tracking-wide">
+                        You've earned your degree. Your journey continues.
+                    </p>
+                </div>
+
+                <!-- Confetti -->
+                <div v-for="i in 40" :key="i"
+                     class="confetti absolute rounded-full pointer-events-none"
+                     :style="{
+                         width: (Math.random() * 8 + 4) + 'px',
+                         height: (Math.random() * 8 + 4) + 'px',
+                         left: Math.random() * 100 + '%',
+                         top: '-10px',
+                         background: ['#22c55e', '#f59e0b', '#3b82f6', '#ec4899'][Math.floor(Math.random() * 4)],
+                     }">
+                </div>
+            </div>
+        </div>
 
         <!-- Canvas Background -->
         <canvas ref="starsCanvas" class="fixed inset-0 w-full h-full pointer-events-none"></canvas>
