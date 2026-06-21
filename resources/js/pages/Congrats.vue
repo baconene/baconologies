@@ -232,18 +232,15 @@ onUnmounted(() => {
              CONGRATULATIONS MODAL
         ══════════════════════════════════════════════════════════ -->
         <div v-if="showCongratulationsModal"
-             class="congratulations-backdrop fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
+             class="congratulations-backdrop fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center"
              @click="closeCongratulationsModal">
-        </div>
 
-        <!-- Modal Card - Center of Screen -->
-        <div v-if="showCongratulationsModal"
-             class="z-50 p-4 md:p-6"
-             style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; max-width: 28rem;"
-             @click.stop>
+            <!-- Modal Card - Center of Screen -->
+            <div class="congratulations-modal relative w-full max-w-sm md:max-w-md p-4 md:p-6"
+                 @click.stop
+                 style="display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important;">
 
-            <!-- Modal Content -->
-            <div class="congratulations-modal relative">
+                <!-- Modal Content Wrapper -->
 
                 <!-- Close Button -->
                 <button @click="closeCongratulationsModal"
