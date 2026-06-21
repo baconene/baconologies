@@ -23,6 +23,10 @@ Route::get('/congrats', function () {
     return Inertia::render('Congrats');
 })->name('congrats');
 
+Route::get('/sampleNWSForecast', function () {
+    return Inertia::render('SampleNWSForecast');
+})->name('sampleNWSForecast');
+
 Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
