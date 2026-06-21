@@ -255,8 +255,7 @@ onUnmounted(() => {
 
             <div class="relative z-10 max-w-3xl mx-auto">
                 <div class="degree-card border-2 border-green-400/40 p-10 md:p-16 relative"
-                     style="background: linear-gradient(135deg, rgba(34,197,94,.08), rgba(34,197,94,.02)), url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><text x="10" y="90" font-size="12" opacity="0.05" fill="rgba(34,197,94,.3)">DEGREE</text></svg>');
-                             backdrop-filter: blur(4px);">
+                     style="background: linear-gradient(135deg, rgba(34,197,94,.08), rgba(34,197,94,.02)); backdrop-filter: blur(4px);">
                     <!-- Corner stamps -->
                     <div class="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-green-400/50"></div>
                     <div class="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-green-400/50"></div>
