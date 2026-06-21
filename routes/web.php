@@ -19,7 +19,9 @@ Route::get('/ganbatteneMira', function () {
     return Inertia::render('GanbatteneMira');
 })->name('ganbatteneMira');
 
-
+Route::get('/congrats', function () {
+    return Inertia::render('Congrats');
+})->name('congrats');
 
 Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
