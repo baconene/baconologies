@@ -20,9 +20,9 @@ const showCongratulationsModal = ref(true)
 let congratulationsTimeout: ReturnType<typeof setTimeout> | null = null
 
 const timeline = [
-    { year: '2022', title: 'Enrollment', color: 'orange' },
-    { year: '2024', title: 'Fieldwork', color: 'blue' },
-    { year: '2026', title: 'Graduation', color: 'green' },
+    { year: '2022', title: 'Mission Briefing', desc: 'Accepted assignment: Social Work Agent Training', color: 'orange' },
+    { year: '2024', title: 'Field Operations', desc: 'Deployed in real-world community defense zones', color: 'blue' },
+    { year: '2026', title: 'Agent Certification', desc: 'Mission Complete — Cleared for active duty', color: 'green' },
 ]
 
 let starsAnimFrame = 0
@@ -234,13 +234,12 @@ onUnmounted(() => {
         <div v-if="showCongratulationsModal"
              class="congratulations-backdrop fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
 
-            <!-- Modal Card -->
-            <div class="congratulations-modal relative max-w-md w-full"
-                 style="transform: translate(-50%, -50%); left: 50%; top: 50%;">
+            <!-- Modal Card - Centered -->
+            <div class="congratulations-modal relative w-full max-w-sm md:max-w-md">
 
                 <!-- Close Button -->
                 <button @click="closeCongratulationsModal"
-                        class="absolute -top-3 -right-3 z-20 w-10 h-10 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center text-white font-bold transition-all duration-200"
+                        class="absolute -top-4 -right-4 z-20 w-10 h-10 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center text-white font-bold transition-all duration-200"
                         style="box-shadow: 0 0 20px rgba(34,197,94,.5);">
                     ✕
                 </button>
@@ -253,11 +252,11 @@ onUnmounted(() => {
 
                 <!-- Title -->
                 <div class="text-center mt-6 mb-4">
-                    <h2 class="text-3xl md:text-4xl font-black text-white mb-2"
+                    <h2 class="text-2xl md:text-3xl lg:text-4xl font-black text-white mb-2"
                         style="text-shadow: 0 0 20px rgba(34,197,94,.4);">
                         Congratulations!
                     </h2>
-                    <p class="text-sm md:text-base text-white/70 tracking-wide">
+                    <p class="text-xs md:text-sm lg:text-base text-white/70 tracking-wide">
                         You've earned your degree. Your journey continues.
                     </p>
                 </div>
@@ -400,13 +399,14 @@ onUnmounted(() => {
 
                         <!-- Timeline Points -->
                         <div v-for="(point, i) in timeline" :key="i"
-                             class="timeline-point relative z-10 flex flex-col items-center w-full md:w-auto">
+                             class="timeline-point relative z-10 flex flex-col items-center w-full md:w-auto px-4">
                             <div class="w-12 h-12 rounded-full border-3 border-green-400 bg-black/60 flex items-center justify-center mb-4"
                                  style="box-shadow: 0 0 20px rgba(34,197,94,.4);">
                                 <div class="w-5 h-5 rounded-full" :style="{ background: point.color === 'orange' ? '#f59e0b' : point.color === 'blue' ? '#3b82f6' : '#22c55e' }"></div>
                             </div>
                             <span class="text-sm md:text-base font-black text-green-400 mb-1">{{ point.year }}</span>
-                            <span class="text-sm md:text-base text-white/70">{{ point.title }}</span>
+                            <span class="text-sm md:text-base font-bold text-white mb-2 text-center">{{ point.title }}</span>
+                            <span class="text-xs md:text-sm text-white/50 text-center max-w-xs">{{ point.desc }}</span>
                         </div>
                     </div>
                 </div>
