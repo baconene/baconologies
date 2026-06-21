@@ -238,7 +238,8 @@ onUnmounted(() => {
 
         <!-- Modal Card - Center of Screen -->
         <div v-if="showCongratulationsModal"
-             class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-sm md:max-w-md p-4 md:p-6"
+             class="z-50 p-4 md:p-6"
+             style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; max-width: 28rem;"
              @click.stop>
 
             <!-- Modal Content -->
