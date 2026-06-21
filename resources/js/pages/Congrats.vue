@@ -236,9 +236,9 @@ onUnmounted(() => {
              @click="closeCongratulationsModal">
         </div>
 
-        <!-- Modal Card - Top Center with Padding -->
+        <!-- Modal Card - Center of Screen -->
         <div v-if="showCongratulationsModal"
-             class="fixed top-0 left-1/2 -translate-x-1/2 z-50 w-full max-w-sm md:max-w-md p-4 md:p-6 pt-12 md:pt-16"
+             class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-sm md:max-w-md p-4 md:p-6"
              @click.stop>
 
             <!-- Modal Content -->
