@@ -319,7 +319,7 @@ onUnmounted(() => {
 
                 <div class="celebration-image rounded-lg overflow-hidden border-2 border-amber-400/30"
                      style="backdrop-filter: blur(4px); box-shadow: 0 0 40px rgba(251,191,36,.2), inset 0 0 30px rgba(251,191,36,.05);">
-                    <img src="/storage/Gemini_Generated_Image_lr9ynrlr9ynrlr9y.png" alt="Amira's Graduation"
+                    <img src="/images/Gemini_Generated_Image_lr9ynrlr9ynrlr9y.png" alt="Amira's Graduation"
                          class="w-full h-auto object-cover">
                 </div>
 
@@ -346,7 +346,7 @@ onUnmounted(() => {
                 <!-- Family Image -->
                 <div class="celebration-image rounded-lg overflow-hidden border-2 border-purple-400/30 mb-12"
                      style="backdrop-filter: blur(4px); box-shadow: 0 0 40px rgba(192,132,252,.2);">
-                    <img src="/storage/5826936767401675501.jpg" alt="Spy x Family Support"
+                    <img src="/images/5826936767401675501.jpg" alt="Spy x Family Support"
                          class="w-full h-auto object-cover">
                 </div>
 
