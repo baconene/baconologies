@@ -280,7 +280,6 @@ onUnmounted(() => {
                      }">
                 </div>
             </div>
-        </div>
 
         <!-- Canvas Background -->
         <canvas ref="starsCanvas" class="fixed inset-0 w-full h-full pointer-events-none"></canvas>
