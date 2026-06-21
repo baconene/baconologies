@@ -86,11 +86,24 @@ onMounted(() => {
         })
     }
 
-    // ── HERO IMAGE ENTER ───────────────────────────────────────────────
-    gsap.fromTo('.hero-img',
-        { opacity: 0, scale: 0.85, filter: 'blur(20px)' },
-        { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 1.2, delay: 1.8, ease: 'power3.out' },
-    )
+    // ── HERO IMAGE QUADRANTS ───────────────────────────────────────────
+    const quadrants = gsap.utils.toArray<HTMLElement>('.img-quadrant')
+    const quadrantAnimations = [
+        { x: -80, y: -80, delay: 1.8 },    // top-left
+        { x: 80, y: -80, delay: 2.0 },     // top-right
+        { x: -80, y: 80, delay: 2.2 },     // bottom-left
+        { x: 80, y: 80, delay: 2.4 },      // bottom-right
+    ]
+
+    quadrants.forEach((quad, i) => {
+        gsap.fromTo(quad,
+            { opacity: 0, x: quadrantAnimations[i].x, y: quadrantAnimations[i].y, scale: 0.9, filter: 'blur(15px)' },
+            {
+                opacity: 1, x: 0, y: 0, scale: 1, filter: 'blur(0px)',
+                duration: 0.9, ease: 'cubic.inOut', delay: quadrantAnimations[i].delay,
+            },
+        )
+    })
 
     // ── SUBTITLE FADE ──────────────────────────────────────────────────
     gsap.fromTo('.hero-subtitle',
@@ -218,12 +231,30 @@ onUnmounted(() => {
                         </div>
                     </div>
 
-                    <!-- Right: Hero Image -->
+                    <!-- Right: Hero Image with Quadrant Animation -->
                     <div class="order-1 md:order-2">
-                        <div class="hero-img rounded-xl overflow-hidden border-2 border-green-400/30"
+                        <div class="hero-img rounded-xl overflow-hidden border-2 border-green-400/30 relative"
                              style="aspect-ratio: 9/11; box-shadow: 0 0 50px rgba(34,197,94,.25), inset 0 0 50px rgba(34,197,94,.05);">
                             <img src="/images/Gemini_Generated_Image_lr9ynrlr9ynrlr9y.png" alt="Agent Amira"
                                  class="w-full h-full object-cover">
+
+                            <!-- 4 Quadrant Overlays -->
+                            <!-- Top Left -->
+                            <div class="img-quadrant absolute top-0 left-0 w-1/2 h-1/2 bg-gradient-to-br from-green-400/20 to-transparent pointer-events-none"
+                                 style="border-right: 1px solid rgba(34,197,94,.2); border-bottom: 1px solid rgba(34,197,94,.2);">
+                            </div>
+                            <!-- Top Right -->
+                            <div class="img-quadrant absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-to-bl from-green-400/20 to-transparent pointer-events-none"
+                                 style="border-left: 1px solid rgba(34,197,94,.2); border-bottom: 1px solid rgba(34,197,94,.2);">
+                            </div>
+                            <!-- Bottom Left -->
+                            <div class="img-quadrant absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-tr from-green-400/20 to-transparent pointer-events-none"
+                                 style="border-right: 1px solid rgba(34,197,94,.2); border-top: 1px solid rgba(34,197,94,.2);">
+                            </div>
+                            <!-- Bottom Right -->
+                            <div class="img-quadrant absolute bottom-0 right-0 w-1/2 h-1/2 bg-gradient-to-tl from-green-400/20 to-transparent pointer-events-none"
+                                 style="border-left: 1px solid rgba(34,197,94,.2); border-top: 1px solid rgba(34,197,94,.2);">
+                            </div>
                         </div>
                     </div>
                 </div>
