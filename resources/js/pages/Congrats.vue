@@ -8,13 +8,18 @@ gsap.registerPlugin(ScrollTrigger)
 
 const starsCanvas = ref<HTMLCanvasElement | null>(null)
 const heroTitle = ref<HTMLElement | null>(null)
-const heroRef = ref<HTMLElement | null>(null)
 
-const skills = [
-    { icon: '❤️', label: 'Compassion', desc: 'Deep empathy for those in need' },
-    { icon: '🛡️', label: 'Resilience', desc: 'Unwavering strength through challenges' },
-    { icon: '🧠', label: 'Insight', desc: 'Understanding complex human situations' },
-    { icon: '🤝', label: 'Advocacy', desc: 'Championing for the vulnerable' },
+const stats = [
+    { number: '4', label: 'Years of Study', suffix: '+' },
+    { number: '100', label: 'Assignments Completed', suffix: '%' },
+    { number: '1', label: 'Degree Earned', suffix: '✓' },
+    { number: '∞', label: 'Lives to Impact', suffix: '' },
+]
+
+const timeline = [
+    { year: '2022', title: 'Enrollment', color: 'orange' },
+    { year: '2024', title: 'Fieldwork', color: 'blue' },
+    { year: '2026', title: 'Graduation', color: 'green' },
 ]
 
 let starsAnimFrame = 0
@@ -28,11 +33,11 @@ function initStars(canvas: HTMLCanvasElement): () => void {
     function resize() {
         canvas.width = canvas.offsetWidth
         canvas.height = canvas.offsetHeight
-        stars = Array.from({ length: 300 }, () => ({
+        stars = Array.from({ length: 200 }, () => ({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
-            r: Math.random() * 1.5 + 0.3,
-            opacity: Math.random() * 0.7 + 0.2,
+            r: Math.random() * 1.4 + 0.3,
+            opacity: Math.random() * 0.6 + 0.2,
             delta: (Math.random() - 0.5) * 0.015,
         }))
     }
@@ -47,7 +52,7 @@ function initStars(canvas: HTMLCanvasElement): () => void {
             if (s.opacity > 1 || s.opacity < 0.1) s.delta *= -1
             ctx.beginPath()
             ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2)
-            ctx.fillStyle = `rgba(200, 220, 255, ${s.opacity * 0.6})`
+            ctx.fillStyle = `rgba(200, 220, 255, ${s.opacity * 0.5})`
             ctx.fill()
         }
         raf = requestAnimationFrame(draw)
@@ -76,90 +81,94 @@ function splitChars(el: HTMLElement): HTMLSpanElement[] {
 onMounted(() => {
     if (starsCanvas.value) cleanups.push(initStars(starsCanvas.value))
 
-    // ── HERO TITLE ─────────────────────────────────────────────────────
+    // ── NAV LINKS ──────────────────────────────────────────────────────
+    gsap.fromTo('.nav-link',
+        { opacity: 0, y: -10 },
+        { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, delay: 0.2, ease: 'power2.out' },
+    )
+
+    // ── HERO CONTENT ───────────────────────────────────────────────────
     if (heroTitle.value) {
         const chars = splitChars(heroTitle.value)
-        gsap.set(chars, { opacity: 0, y: 60, rotateX: -80 })
+        gsap.set(chars, { opacity: 0, y: 50 })
         gsap.to(chars, {
-            opacity: 1, y: 0, rotateX: 0,
-            duration: 0.85, stagger: 0.04, ease: 'back.out(1.7)', delay: 0.3,
+            opacity: 1, y: 0, duration: 0.75, stagger: 0.03, ease: 'back.out(1.5)', delay: 0.4,
         })
     }
+
+    gsap.fromTo('.hero-subtitle',
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.8, delay: 2, ease: 'power3.out' },
+    )
+
+    gsap.fromTo('.hero-desc',
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.8, delay: 2.3, ease: 'power3.out' },
+    )
+
+    gsap.fromTo('.hero-cta',
+        { opacity: 0, scale: 0.9 },
+        { opacity: 1, scale: 1, duration: 0.6, delay: 2.6, ease: 'back.out(1.4)' },
+    )
+
+    gsap.fromTo('.hero-code',
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.7, delay: 2.8, ease: 'power2.out' },
+    )
 
     // ── HERO IMAGE QUADRANTS ───────────────────────────────────────────
     const quadrants = gsap.utils.toArray<HTMLElement>('.img-quadrant')
     const quadrantAnimations = [
-        { x: -80, y: -80, delay: 1.8 },    // top-left
-        { x: 80, y: -80, delay: 2.0 },     // top-right
-        { x: -80, y: 80, delay: 2.2 },     // bottom-left
-        { x: 80, y: 80, delay: 2.4 },      // bottom-right
+        { x: -60, y: -60, delay: 1.8 },
+        { x: 60, y: -60, delay: 2.0 },
+        { x: -60, y: 60, delay: 2.2 },
+        { x: 60, y: 60, delay: 2.4 },
     ]
 
     quadrants.forEach((quad, i) => {
         gsap.fromTo(quad,
-            { opacity: 0, x: quadrantAnimations[i].x, y: quadrantAnimations[i].y, scale: 0.9, filter: 'blur(15px)' },
+            { opacity: 0, x: quadrantAnimations[i].x, y: quadrantAnimations[i].y, scale: 0.85, filter: 'blur(12px)' },
             {
                 opacity: 1, x: 0, y: 0, scale: 1, filter: 'blur(0px)',
-                duration: 0.9, ease: 'cubic.inOut', delay: quadrantAnimations[i].delay,
+                duration: 0.85, ease: 'cubic.inOut', delay: quadrantAnimations[i].delay,
             },
         )
     })
 
-    // ── SUBTITLE FADE ──────────────────────────────────────────────────
-    gsap.fromTo('.hero-subtitle',
-        { opacity: 0, y: 25 },
-        { opacity: 1, y: 0, duration: 0.9, delay: 2.4, ease: 'power2.out' },
-    )
-
-    // ── FAMILY IMAGE REVEAL ────────────────────────────────────────────
-    gsap.fromTo('.family-img',
-        { opacity: 0, y: 40, scale: 0.9 },
-        {
-            opacity: 1, y: 0, scale: 1, duration: 1, ease: 'power3.out',
-            scrollTrigger: { trigger: '.family-img', start: 'top 75%' },
-        },
-    )
-
-    // ── SKILLS GRID ────────────────────────────────────────────────────
-    gsap.utils.toArray<HTMLElement>('.skill-card').forEach((card, i) => {
-        gsap.fromTo(card,
-            { opacity: 0, y: 35, scale: 0.9 },
+    // ── STATS ──────────────────────────────────────────────────────────
+    gsap.utils.toArray<HTMLElement>('.stat-item').forEach((stat, i) => {
+        gsap.fromTo(stat,
+            { opacity: 0, y: 30 },
             {
-                opacity: 1, y: 0, scale: 1, duration: 0.7, ease: 'power3.out',
-                scrollTrigger: { trigger: card, start: 'top 82%' },
-                delay: i * 0.08,
+                opacity: 1, y: 0, duration: 0.7, ease: 'power3.out',
+                scrollTrigger: { trigger: stat, start: 'top 85%' },
+                delay: i * 0.1,
             },
         )
     })
 
-    // ── STAT COUNTERS ─────────────────────────────────────────────────
-    const statBars = gsap.utils.toArray<HTMLElement>('.stat-bar')
-    statBars.forEach((bar, i) => {
-        const target = 100
-        ScrollTrigger.create({
-            trigger: bar, start: 'top 80%', once: true,
-            onEnter: () => {
-                gsap.fromTo(bar, { width: '0%' }, { width: target + '%', duration: 1.5, ease: 'power3.out', delay: i * 0.1 })
-            },
-        })
-    })
-
-    // ── CLOSING CTA ────────────────────────────────────────────────────
-    gsap.fromTo('.closing-box',
-        { opacity: 0, y: 50, scale: 0.9 },
-        {
-            opacity: 1, y: 0, scale: 1, duration: 1, ease: 'power3.out',
-            scrollTrigger: { trigger: '.closing-box', start: 'top 75%' },
-        },
+    // ── TIMELINE ───────────────────────────────────────────────────────
+    gsap.fromTo('.timeline-label',
+        { opacity: 0, y: -20 },
+        { opacity: 1, y: 0, duration: 0.8, delay: 0.3, ease: 'power3.out', scrollTrigger: { trigger: '.timeline-section', start: 'top 70%' } },
     )
 
-    // ── PARALLAX BG ────────────────────────────────────────────────────
-    if (heroRef.value) {
-        gsap.to('.hero-bg-stars', {
-            y: '30%', ease: 'none',
-            scrollTrigger: { trigger: heroRef.value, start: 'top top', end: 'bottom top', scrub: true },
-        })
-    }
+    gsap.utils.toArray<HTMLElement>('.timeline-point').forEach((point, i) => {
+        gsap.fromTo(point,
+            { opacity: 0, scale: 0 },
+            {
+                opacity: 1, scale: 1, duration: 0.6, ease: 'back.out(1.3)',
+                scrollTrigger: { trigger: point, start: 'top 80%' },
+                delay: i * 0.15,
+            },
+        )
+    })
+
+    // ── BOTTOM SECTION ─────────────────────────────────────────────────
+    gsap.fromTo('.closing-content',
+        { opacity: 0, y: 40 },
+        { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', scrollTrigger: { trigger: '.closing-section', start: 'top 75%' } },
+    )
 })
 
 onUnmounted(() => {
@@ -170,216 +179,185 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <Head title="Agent Amira — Mission Complete | BSSW Degree" />
+    <Head title="Agent Amira — BSSW Degree | Portfolio" />
 
     <div class="relative overflow-x-hidden bg-[#0a0815] text-white min-h-screen" style="font-family: 'Courier New', Courier, monospace;">
 
-        <!-- ══════════════════════════════════════════════════════════
-             HERO SECTION
-        ══════════════════════════════════════════════════════════ -->
-        <section ref="heroRef" class="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-4 pt-20 pb-16">
-            <canvas ref="starsCanvas" class="hero-bg-stars absolute inset-0 w-full h-full"></canvas>
+        <!-- Canvas Background -->
+        <canvas ref="starsCanvas" class="fixed inset-0 w-full h-full pointer-events-none"></canvas>
 
-            <!-- Grid overlay -->
-            <div class="absolute inset-0 opacity-[0.02] pointer-events-none"
-                 style="background-image: linear-gradient(rgba(34,197,94,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(34,197,94,.6) 1px, transparent 1px); background-size: 80px 80px;">
-            </div>
+        <!-- Grid Overlay -->
+        <div class="fixed inset-0 opacity-[0.02] pointer-events-none"
+             style="background-image: linear-gradient(rgba(34,197,94,.4) 1px, transparent 1px), linear-gradient(90deg, rgba(34,197,94,.4) 1px, transparent 1px); background-size: 100px 100px;">
+        </div>
 
-            <div class="relative z-10 max-w-5xl mx-auto w-full">
-                <!-- Hero Grid Layout -->
-                <div class="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+        <div class="relative z-10">
+            <!-- ══════════════════════════════════════════════════════════
+                 NAVBAR
+            ══════════════════════════════════════════════════════════ -->
+            <nav class="sticky top-0 z-40 backdrop-blur-md bg-black/40 border-b border-green-400/10">
+                <div class="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
+                    <div class="text-lg font-black text-white tracking-wider">Agent Amira</div>
+                    <div class="flex items-center gap-8">
+                        <a href="#skills" class="nav-link text-sm text-white/70 hover:text-green-400 transition-colors tracking-wide">Skills</a>
+                        <a href="#journey" class="nav-link text-sm text-white/70 hover:text-green-400 transition-colors tracking-wide">Journey</a>
+                        <a href="#impact" class="nav-link text-sm text-white/70 hover:text-green-400 transition-colors tracking-wide">Impact</a>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- ══════════════════════════════════════════════════════════
+                 HERO SECTION
+            ══════════════════════════════════════════════════════════ -->
+            <section class="relative min-h-screen flex items-center px-4 md:px-8 py-20">
+                <div class="max-w-7xl mx-auto w-full grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
+
                     <!-- Left: Content -->
-                    <div class="flex flex-col justify-center order-2 md:order-1">
-                        <div class="mb-4 inline-block w-fit">
-                            <div class="px-3 py-1 border border-green-400/50 bg-green-400/10 text-green-300 text-[8px] tracking-[0.35em] uppercase">
-                                ✓ MISSION COMPLETE
-                            </div>
+                    <div class="order-2 md:order-1">
+                        <div class="mb-4">
+                            <span class="text-sm md:text-base text-green-400 font-bold tracking-widest">WELCOME</span>
                         </div>
 
                         <h1 ref="heroTitle"
-                            class="text-4xl md:text-5xl lg:text-6xl font-black uppercase leading-tight mb-4"
-                            style="text-shadow: 0 0 40px rgba(34,197,94,.5);">
-                            <span class="text-green-400">Agent</span>
+                            class="text-4xl md:text-6xl lg:text-7xl font-black leading-tight mb-6"
+                            style="text-shadow: 0 0 30px rgba(34,197,94,.3);">
+                            <span class="text-white">Hey, I'm</span>
                             <br>
-                            <span class="text-white">Amira</span>
+                            <span class="text-green-400">Amira Reyshi Cantado</span>
                         </h1>
 
-                        <div class="hero-subtitle space-y-2">
-                            <p class="text-base md:text-lg tracking-[0.2em] text-green-300/80">
-                                Bachelor of Science in Social Work
-                            </p>
-                            <p class="text-sm md:text-base text-white/50 leading-relaxed max-w-sm">
-                                Cleared for active field deployment in social work and community advocacy. Ready to make an impact.
-                            </p>
+                        <p class="hero-subtitle text-base md:text-lg text-white/70 mb-4 leading-relaxed">
+                            Social Work Professional & Community Advocate
+                        </p>
+
+                        <p class="hero-desc text-sm md:text-base text-white/50 max-w-md leading-relaxed mb-8">
+                            Dedicated to creating meaningful impact through social work. Armed with a degree in social work and a mission to help those in need.
+                        </p>
+
+                        <div class="hero-cta flex items-center gap-4 mb-8">
+                            <button class="px-6 py-3 bg-green-500 hover:bg-green-600 text-black font-bold rounded-lg transition-all duration-300 text-sm md:text-base tracking-wide">
+                                Start Mission
+                            </button>
+                            <button class="px-6 py-3 border-2 border-green-400/50 hover:border-green-400 text-white hover:text-green-400 font-bold rounded-lg transition-all duration-300 text-sm md:text-base tracking-wide">
+                                Learn More
+                            </button>
                         </div>
 
-                        <div class="mt-8 pt-6 border-t border-green-400/20">
-                            <div class="grid grid-cols-3 gap-4 text-center">
-                                <div>
-                                    <div class="text-2xl md:text-3xl font-black text-green-400">✓</div>
-                                    <div class="text-[9px] text-white/40 mt-1 tracking-widest">APPROVED</div>
-                                </div>
-                                <div>
-                                    <div class="text-2xl md:text-3xl font-black text-amber-300">2026</div>
-                                    <div class="text-[9px] text-white/40 mt-1 tracking-widest">YEAR</div>
-                                </div>
-                                <div>
-                                    <div class="text-2xl md:text-3xl font-black text-purple-400">∞</div>
-                                    <div class="text-[9px] text-white/40 mt-1 tracking-widest">IMPACT</div>
-                                </div>
-                            </div>
+                        <div class="hero-code text-xs md:text-sm text-green-400/70 font-mono p-4 bg-black/40 rounded-lg border border-green-400/20 inline-block">
+                            <div>// Agent Status: ACTIVE ✓</div>
+                            <div class="text-white/50">// Clearance: MAXIMUM</div>
                         </div>
                     </div>
 
-                    <!-- Right: Hero Image with Quadrant Animation -->
+                    <!-- Right: Image -->
                     <div class="order-1 md:order-2">
-                        <div class="hero-img rounded-xl overflow-hidden border-2 border-green-400/30 relative"
-                             style="aspect-ratio: 9/11; box-shadow: 0 0 50px rgba(34,197,94,.25), inset 0 0 50px rgba(34,197,94,.05);">
+                        <div class="relative rounded-2xl overflow-hidden"
+                             style="aspect-ratio: 3/4;">
                             <img src="/images/Gemini_Generated_Image_lr9ynrlr9ynrlr9y.png" alt="Agent Amira"
                                  class="w-full h-full object-cover">
 
-                            <!-- 4 Quadrant Overlays -->
-                            <!-- Top Left -->
-                            <div class="img-quadrant absolute top-0 left-0 w-1/2 h-1/2 bg-gradient-to-br from-green-400/20 to-transparent pointer-events-none"
-                                 style="border-right: 1px solid rgba(34,197,94,.2); border-bottom: 1px solid rgba(34,197,94,.2);">
+                            <!-- Quadrant Overlays -->
+                            <div class="img-quadrant absolute top-0 left-0 w-1/2 h-1/2 bg-gradient-to-br from-green-400/15 to-transparent"
+                                 style="border-right: 1px solid rgba(34,197,94,.15); border-bottom: 1px solid rgba(34,197,94,.15);">
                             </div>
-                            <!-- Top Right -->
-                            <div class="img-quadrant absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-to-bl from-green-400/20 to-transparent pointer-events-none"
-                                 style="border-left: 1px solid rgba(34,197,94,.2); border-bottom: 1px solid rgba(34,197,94,.2);">
+                            <div class="img-quadrant absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-to-bl from-green-400/15 to-transparent"
+                                 style="border-left: 1px solid rgba(34,197,94,.15); border-bottom: 1px solid rgba(34,197,94,.15);">
                             </div>
-                            <!-- Bottom Left -->
-                            <div class="img-quadrant absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-tr from-green-400/20 to-transparent pointer-events-none"
-                                 style="border-right: 1px solid rgba(34,197,94,.2); border-top: 1px solid rgba(34,197,94,.2);">
+                            <div class="img-quadrant absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-tr from-green-400/15 to-transparent"
+                                 style="border-right: 1px solid rgba(34,197,94,.15); border-top: 1px solid rgba(34,197,94,.15);">
                             </div>
-                            <!-- Bottom Right -->
-                            <div class="img-quadrant absolute bottom-0 right-0 w-1/2 h-1/2 bg-gradient-to-tl from-green-400/20 to-transparent pointer-events-none"
-                                 style="border-left: 1px solid rgba(34,197,94,.2); border-top: 1px solid rgba(34,197,94,.2);">
+                            <div class="img-quadrant absolute bottom-0 right-0 w-1/2 h-1/2 bg-gradient-to-tl from-green-400/15 to-transparent"
+                                 style="border-left: 1px solid rgba(34,197,94,.15); border-top: 1px solid rgba(34,197,94,.15);">
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- ══════════════════════════════════════════════════════════
-             AGENT PROFILE SECTION
-        ══════════════════════════════════════════════════════════ -->
-        <section class="relative py-20 md:py-28 px-4 overflow-hidden">
-            <div class="absolute inset-0" style="background: linear-gradient(135deg, rgba(34,197,94,.05) 0%, rgba(34,197,94,.02) 100%);"></div>
-
-            <div class="relative z-10 max-w-5xl mx-auto">
-                <div class="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
-                    <!-- Skills -->
-                    <div>
-                        <h2 class="text-2xl md:text-3xl font-black text-green-400 mb-8 tracking-wider">CORE COMPETENCIES</h2>
-                        <div class="space-y-4">
-                            <div v-for="(skill, i) in skills" :key="i"
-                                 class="skill-card">
-                                <div class="flex items-start gap-4">
-                                    <div class="text-3xl shrink-0">{{ skill.icon }}</div>
-                                    <div>
-                                        <h3 class="font-bold text-white mb-1 tracking-wide">{{ skill.label }}</h3>
-                                        <p class="text-sm text-white/50 leading-relaxed">{{ skill.desc }}</p>
-                                    </div>
-                                </div>
+            <!-- ══════════════════════════════════════════════════════════
+                 STATS SECTION
+            ══════════════════════════════════════════════════════════ -->
+            <section id="skills" class="relative py-20 md:py-28 px-4 md:px-8">
+                <div class="max-w-7xl mx-auto">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                        <div v-for="(stat, i) in stats" :key="i"
+                             class="stat-item p-6 md:p-8 bg-gradient-to-br from-green-400/10 to-transparent border border-green-400/20 rounded-xl hover:border-green-400/40 transition-colors">
+                            <div class="text-3xl md:text-4xl lg:text-5xl font-black text-green-400 mb-2">
+                                {{ stat.number }}<span class="text-2xl">{{ stat.suffix }}</span>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Stats -->
-                    <div>
-                        <h2 class="text-2xl md:text-3xl font-black text-green-400 mb-8 tracking-wider">MISSION STATS</h2>
-                        <div class="space-y-7">
-                            <div>
-                                <div class="flex justify-between items-center mb-2">
-                                    <span class="text-sm font-bold text-white tracking-wide">Persistence</span>
-                                    <span class="text-sm text-green-400 font-bold">100%</span>
-                                </div>
-                                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
-                                    <div class="stat-bar h-full w-0 rounded-full" style="background: linear-gradient(90deg, #22c55e, #86efac); box-shadow: 0 0 15px rgba(34,197,94,.6);"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between items-center mb-2">
-                                    <span class="text-sm font-bold text-white tracking-wide">Dedication</span>
-                                    <span class="text-sm text-green-400 font-bold">100%</span>
-                                </div>
-                                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
-                                    <div class="stat-bar h-full w-0 rounded-full" style="background: linear-gradient(90deg, #22c55e, #86efac); box-shadow: 0 0 15px rgba(34,197,94,.6);"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between items-center mb-2">
-                                    <span class="text-sm font-bold text-white tracking-wide">Community Impact</span>
-                                    <span class="text-sm text-green-400 font-bold">100%</span>
-                                </div>
-                                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
-                                    <div class="stat-bar h-full w-0 rounded-full" style="background: linear-gradient(90deg, #22c55e, #86efac); box-shadow: 0 0 15px rgba(34,197,94,.6);"></div>
-                                </div>
-                            </div>
+                            <div class="text-xs md:text-sm text-white/60 tracking-wide">{{ stat.label }}</div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- ══════════════════════════════════════════════════════════
-             MISSION SUPPORT SECTION
-        ══════════════════════════════════════════════════════════ -->
-        <section class="relative py-20 md:py-28 px-4 overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-b from-transparent via-green-400/5 to-transparent"></div>
+            <!-- ══════════════════════════════════════════════════════════
+                 TIMELINE SECTION
+            ══════════════════════════════════════════════════════════ -->
+            <section id="journey" class="timeline-section relative py-20 md:py-28 px-4 md:px-8">
+                <div class="max-w-7xl mx-auto">
+                    <h2 class="timeline-label text-2xl md:text-4xl font-black text-white mb-16 tracking-wider text-center">
+                        My Journey
+                    </h2>
 
-            <div class="relative z-10 max-w-4xl mx-auto">
-                <h2 class="text-2xl md:text-3xl font-black text-center text-purple-300 mb-12 tracking-wider">
-                    TEAM SUPPORT
-                </h2>
+                    <!-- Timeline Visual -->
+                    <div class="relative flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12">
+                        <!-- Timeline Line (hidden on mobile) -->
+                        <div class="hidden md:block absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-green-400/40 to-transparent -translate-y-1/2"></div>
 
-                <div class="family-img rounded-lg overflow-hidden border border-purple-400/30"
-                     style="box-shadow: 0 0 40px rgba(192,132,252,.15);">
-                    <img src="/images/5826936767401675501.jpg" alt="Family Support Team"
-                         class="w-full h-auto object-cover">
+                        <!-- Timeline Points -->
+                        <div v-for="(point, i) in timeline" :key="i"
+                             class="timeline-point relative z-10 flex flex-col items-center w-full md:w-auto">
+                            <div class="w-12 h-12 rounded-full border-3 border-green-400 bg-black/60 flex items-center justify-center mb-4"
+                                 style="box-shadow: 0 0 20px rgba(34,197,94,.4);">
+                                <div class="w-5 h-5 rounded-full" :style="{ background: point.color === 'orange' ? '#f59e0b' : point.color === 'blue' ? '#3b82f6' : '#22c55e' }"></div>
+                            </div>
+                            <span class="text-sm md:text-base font-black text-green-400 mb-1">{{ point.year }}</span>
+                            <span class="text-sm md:text-base text-white/70">{{ point.title }}</span>
+                        </div>
+                    </div>
                 </div>
+            </section>
 
-                <p class="text-center text-purple-300/60 text-sm md:text-base mt-6 tracking-[0.2em]">
-                    Every great agent has a support system. Yours believes in you.
-                </p>
-            </div>
-        </section>
-
-        <!-- ══════════════════════════════════════════════════════════
-             CLOSING SECTION
-        ══════════════════════════════════════════════════════════ -->
-        <section class="relative py-24 md:py-32 px-4 overflow-hidden">
-            <div class="absolute inset-0" style="background: linear-gradient(135deg, #0a0815 0%, #0f0920 100%);"></div>
-
-            <div class="relative z-10 max-w-3xl mx-auto">
-                <div class="closing-box text-center space-y-8">
-                    <div class="space-y-3 mb-8">
-                        <h2 class="text-3xl md:text-5xl font-black text-white tracking-wider">
-                            Your Mission Awaits
+            <!-- ══════════════════════════════════════════════════════════
+                 CLOSING SECTION
+            ══════════════════════════════════════════════════════════ -->
+            <section id="impact" class="closing-section relative py-20 md:py-28 px-4 md:px-8 border-t border-green-400/10">
+                <div class="max-w-5xl mx-auto">
+                    <div class="closing-content">
+                        <h2 class="text-2xl md:text-4xl font-black text-white mb-6 tracking-wider">
+                            What Drives Me
                         </h2>
-                        <p class="text-base md:text-lg text-white/70 leading-relaxed">
-                            You've earned your degree. Now comes the real work — helping others find their way, restoring hope, and building stronger communities. This is where your impact begins.
-                        </p>
-                    </div>
 
-                    <div class="border-t border-b border-green-400/20 py-8">
-                        <p class="text-xl md:text-2xl font-black text-green-400 mb-3" style="text-shadow: 0 0 20px rgba(34,197,94,.4);">
-                            Welcome, Agent Amira
-                        </p>
-                        <p class="text-sm md:text-base text-white/50 tracking-[0.25em]">
-                            AUTHORIZED FOR FIELD OPERATIONS
-                        </p>
-                    </div>
+                        <div class="grid md:grid-cols-2 gap-8 mb-12">
+                            <div class="p-6 md:p-8 bg-gradient-to-br from-purple-400/10 to-transparent border border-purple-400/20 rounded-xl">
+                                <div class="text-lg font-bold text-white mb-3">Compassion</div>
+                                <p class="text-sm md:text-base text-white/60 leading-relaxed">
+                                    Deep empathy for those struggling. Every person deserves dignity, respect, and support.
+                                </p>
+                            </div>
 
-                    <div class="pt-4">
-                        <p class="text-white/60 text-sm md:text-base leading-relaxed max-w-2xl mx-auto">
-                            Every person you help. Every life you change. Every moment you choose compassion over indifference — that's your real mission. The world doesn't need another degree holder. It needs someone who cares like you do.
-                        </p>
+                            <div class="p-6 md:p-8 bg-gradient-to-br from-amber-400/10 to-transparent border border-amber-400/20 rounded-xl">
+                                <div class="text-lg font-bold text-white mb-3">Action</div>
+                                <p class="text-sm md:text-base text-white/60 leading-relaxed">
+                                    Not just words. Dedication to real change through active engagement and continuous learning.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="p-8 bg-gradient-to-r from-green-400/10 to-transparent border border-green-400/20 rounded-xl">
+                            <p class="text-white/80 text-base md:text-lg leading-relaxed mb-4">
+                                Your mission doesn't end with a degree. It begins here. Every person you help, every community you strengthen, every moment you choose compassion — that's your real legacy.
+                            </p>
+                            <p class="text-green-400 font-bold tracking-wider">
+                                Ready to make an impact? Let's connect.
+                            </p>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
+
+        </div>
 
     </div>
 </template>
