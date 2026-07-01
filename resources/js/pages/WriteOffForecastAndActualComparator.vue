@@ -12,10 +12,10 @@ import {
 
 Chart.register(DoughnutController, BarController, ArcElement, BarElement, LinearScale, CategoryScale, Tooltip, Legend)
 
-// pdfjs worker — Vite will bundle pdfjs-dist; use the CDN worker to avoid
-// bundling the giant worker blob into app.js
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-    `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.min.mjs',
+    import.meta.url,
+).toString()
 
 // ── Types ───────────────────────────────────────────────────────────────────
 interface Account {
