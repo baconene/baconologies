@@ -7,9 +7,15 @@ import { defineConfig } from 'vite';
 
 // Rename .mjs chunks/assets to .js so servers without an explicit .mjs MIME
 // type mapping (e.g. the pdf.js worker) serve them with the correct type.
+// renderChunk patches URL strings inside other bundles that reference .mjs files;
+// generateBundle renames the actual output file.
 function mjsToJs(): Plugin {
     return {
         name: 'mjs-to-js',
+        renderChunk(code) {
+            if (!code.includes('.mjs')) return null;
+            return { code: code.replace(/\.mjs(['",)/])/g, '.js$1'), map: null };
+        },
         generateBundle(_options, bundle) {
             for (const key of Object.keys(bundle)) {
                 if (key.endsWith('.mjs')) {
