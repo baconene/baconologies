@@ -134,7 +134,8 @@ function parseAccounts(raw: string): Record<string, Account> {
     const text = normalize(raw)
     const accounts: Record<string, Account> = {}
 
-    const G1_RE = /\b(\d{10})\b\s+([\w,'\-\.\/ ]+?)\s+(RES|COM)\s+(\d{1,2})\s+(\d{2}-\d{2}-\d{4})\s+(\d{2}-\d{2}-\d{4})\s+([\d,]+\.\d{2})\s+(FROZEN|FREEZABLE\/PENDING|FREEZABLE|PENDING)((?:\s+\d{2}-\d{2}-\d{4}){0,12})/g
+    // Name is letters/spaces/punctuation only — NO digits — so SA_IDs (10-digit) never extend the name
+    const G1_RE = /\b(\d{10})\b\s+([A-Za-z][A-Za-z,'\-\.\s]+?)\s+(RES|COM)\s+(\d{1,2})\s+(\d{2}-\d{2}-\d{4})\s+(\d{2}-\d{2}-\d{4})\s+([\d,]+\.\d{2})\s+(FROZEN|FREEZABLE\/PENDING|FREEZABLE|PENDING)((?:\s+\d{2}-\d{2}-\d{4}){0,12})/g
     let m: RegExpExecArray | null
     while ((m = G1_RE.exec(text)) !== null) {
         const id = m[1]
