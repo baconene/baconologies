@@ -148,7 +148,9 @@ function parseAccounts(raw: string): { accounts: Record<string, Account>; report
     // Name allows digits/symbols: "31 North LLC", "% Kirk Realty", "Pulte Group - 1050", "W & W Properties"
     // Bill/due dates may be partial fragments (e.g. "03-" "03-") when PDF splits the year to another chunk;
     // captured flexibly as zero-or-more date tokens ending in "-", balance anchored by FROZEN/FREEZABLE keyword.
-    const G1_RE = /\b(\d{10})\b\s+([A-Za-z\d%&()',\-\.\s\/]+?)\s+(RES|COM)\s+(\d{1,2})\s+((?:\d{2}-[\d-]*\s+)*)([\d,]+(?:\.\d{1,2})?)\s+(FROZEN|FREEZABLE\/\s*PENDING|FREEZABLE|PENDING)((?:\s+\d{2}-\d{2}-\d{4}){0,12})/g
+    // Name uses negative lookahead (?!\d{10}) so digits are allowed (for "31 North LLC", "Pulte Group - 1050")
+    // but the name cannot span through a 10-digit ACCT_ID or SA_ID, preventing false matches in G_2 rows.
+    const G1_RE = /\b(\d{10})\b\s+((?:(?!\d{10})[A-Za-z\d%&()',\-\.\s\/])+?)\s+(RES|COM)\s+(\d{1,2})\s+((?:\d{2}-[\d-]*\s+)*)([\d,]+(?:\.\d{1,2})?)\s+(FROZEN|FREEZABLE\/\s*PENDING|FREEZABLE|PENDING)((?:\s+\d{2}-\d{2}-\d{4}){0,12})/g
     let m: RegExpExecArray | null
     while ((m = G1_RE.exec(text)) !== null) {
         const id = m[1]
