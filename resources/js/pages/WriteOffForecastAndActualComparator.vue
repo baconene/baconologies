@@ -52,6 +52,12 @@ interface Change {
     dateChanges: string[]
 }
 
+interface ParseDiag {
+    reported: number
+    parsed: number
+    missed: Array<{ id: string; context: string }>
+}
+
 interface Results {
     acc1: Record<string, Account>
     acc2: Record<string, Account>
@@ -63,6 +69,8 @@ interface Results {
     bal2: number
     total1: number
     total2: number
+    diag1: ParseDiag
+    diag2: ParseDiag
 }
 
 // ── State ──────────────────────────────────────────────────────────────────
@@ -132,7 +140,7 @@ function normalize(raw: string): string {
 // RES|COM is the discriminator: SA_IDs (also 10-digit) are never followed by a standalone RES/COM + digit.
 // The 12 dates are captured inline so G_2 SA_END_DATEs don't bleed in.
 //
-function parseAccounts(raw: string): { accounts: Record<string, Account>; reportedTotal: number } {
+function parseAccounts(raw: string): { accounts: Record<string, Account>; reportedTotal: number; diag: ParseDiag } {
     const text = normalize(raw)
     const accounts: Record<string, Account> = {}
 
@@ -183,7 +191,26 @@ function parseAccounts(raw: string): { accounts: Record<string, Account>; report
         || text.match(/NO\.?\s*OF\s+ACCTS?\s*:?\s*(\d+)/i)
         || text.match(/ACCOUNTS?\s+COUNT\s*:?\s*(\d+)/i)
     const reportedTotal = totalM ? parseInt(totalM[1]) : Object.keys(accounts).length
-    return { accounts, reportedTotal }
+    const parsedCount = Object.keys(accounts).length
+
+    // Diagnostic: find 10-digit IDs near RES|COM that weren't captured by G_1
+    const missed: Array<{ id: string; context: string }> = []
+    const seenIds = new Set<string>()
+    const scanRe = /\b(\d{10})\b/g
+    let sm: RegExpExecArray | null
+    while ((sm = scanRe.exec(text)) !== null) {
+        const id = sm[1]
+        if (seenIds.has(id)) continue
+        seenIds.add(id)
+        if (accounts[id]) continue
+        const window200 = text.slice(sm.index, sm.index + 220)
+        if (/\b(?:RES|COM)\b/.test(window200) && missed.length < 30) {
+            missed.push({ id, context: window200 })
+        }
+    }
+
+    const diag: ParseDiag = { reported: reportedTotal, parsed: parsedCount, missed }
+    return { accounts, reportedTotal, diag }
 }
 
 // ── Comparison ─────────────────────────────────────────────────────────────
@@ -228,11 +255,11 @@ async function run() {
             extractText(file1.value, p => { prog1.value = p }),
             extractText(file2.value, p => { prog2.value = p }),
         ])
-        const { accounts: acc1, reportedTotal: total1 } = parseAccounts(raw1)
-        const { accounts: acc2, reportedTotal: total2 } = parseAccounts(raw2)
+        const { accounts: acc1, reportedTotal: total1, diag: diag1 } = parseAccounts(raw1)
+        const { accounts: acc2, reportedTotal: total2, diag: diag2 } = parseAccounts(raw2)
         const bal1 = Object.values(acc1).reduce((s, a) => s + a.balance, 0)
         const bal2 = Object.values(acc2).reduce((s, a) => s + a.balance, 0)
-        results.value = { acc1, acc2, bal1, bal2, total1, total2, ...compare(acc1, acc2) }
+        results.value = { acc1, acc2, bal1, bal2, total1, total2, diag1, diag2, ...compare(acc1, acc2) }
         activeTab.value = 'overview'
         await new Promise(r => setTimeout(r, 80))
         renderCharts()
@@ -470,6 +497,64 @@ const tabs = [
                             <div class="wof-insight-val yellow">{{ results.changed.filter(c => c.delta === 0 && !c.freezeChanged && c.dateChanges.length).length }}</div>
                             <div class="wof-insight-sub">accounts with schedule shifts only</div>
                         </div>
+                    </div>
+
+                    <!-- Parse Diagnostics -->
+                    <div class="diag-box">
+                        <div class="diag-header">
+                            <span class="diag-title">Parse Diagnostics</span>
+                            <span class="diag-formula">
+                                PDF#1: <b>{{ results.diag1.reported }}</b> reported — <b>{{ results.diag1.parsed }}</b> parsed
+                                <span :class="results.diag1.reported === results.diag1.parsed ? 'diag-ok' : 'diag-warn'">
+                                    ({{ results.diag1.reported === results.diag1.parsed ? '✓ match' : (results.diag1.reported - results.diag1.parsed) + ' unmatched' }})
+                                </span>
+                                &nbsp;·&nbsp;
+                                PDF#2: <b>{{ results.diag2.reported }}</b> reported — <b>{{ results.diag2.parsed }}</b> parsed
+                                <span :class="results.diag2.reported === results.diag2.parsed ? 'diag-ok' : 'diag-warn'">
+                                    ({{ results.diag2.reported === results.diag2.parsed ? '✓ match' : (results.diag2.reported - results.diag2.parsed) + ' unmatched' }})
+                                </span>
+                            </span>
+                        </div>
+                        <div class="diag-formula diag-proof">
+                            <span>Changed + Removed + New = Total Differences</span>
+                            <span class="diag-eq">
+                                {{ results.changed.length }} + {{ results.removed.length }} + {{ results.added.length }}
+                                = {{ results.changed.length + results.removed.length + results.added.length }}
+                                <span :class="results.changed.length + results.removed.length + results.added.length === (results.changed.length + results.removed.length + results.added.length) ? 'diag-ok' : 'diag-warn'">✓</span>
+                            </span>
+                            <span style="margin-left:1.5rem">PDF#1 parsed = Changed + Removed + Unchanged</span>
+                            <span class="diag-eq"
+                                :class="results.diag1.parsed === results.changed.length + results.removed.length + results.unchanged.length ? 'diag-ok' : 'diag-warn'">
+                                {{ results.diag1.parsed }} {{ results.diag1.parsed === results.changed.length + results.removed.length + results.unchanged.length ? '=' : '≠' }}
+                                {{ results.changed.length }} + {{ results.removed.length }} + {{ results.unchanged.length }}
+                                = {{ results.changed.length + results.removed.length + results.unchanged.length }}
+                            </span>
+                            <span style="margin-left:1.5rem">PDF#2 parsed = Changed + New + Unchanged</span>
+                            <span class="diag-eq"
+                                :class="results.diag2.parsed === results.changed.length + results.added.length + results.unchanged.length ? 'diag-ok' : 'diag-warn'">
+                                {{ results.diag2.parsed }} {{ results.diag2.parsed === results.changed.length + results.added.length + results.unchanged.length ? '=' : '≠' }}
+                                {{ results.changed.length }} + {{ results.added.length }} + {{ results.unchanged.length }}
+                                = {{ results.changed.length + results.added.length + results.unchanged.length }}
+                            </span>
+                        </div>
+
+                        <template v-if="results.diag1.missed.length || results.diag2.missed.length">
+                            <div class="diag-missed-label">Unmatched rows sample (IDs near RES/COM that G_1 didn't capture):</div>
+                            <div v-if="results.diag1.missed.length">
+                                <div class="diag-pdf-label">PDF #1</div>
+                                <div v-for="row in results.diag1.missed" :key="row.id" class="diag-row">
+                                    <code class="diag-id">{{ row.id }}</code>
+                                    <span class="diag-ctx">{{ row.context }}</span>
+                                </div>
+                            </div>
+                            <div v-if="results.diag2.missed.length" style="margin-top:0.6rem">
+                                <div class="diag-pdf-label">PDF #2</div>
+                                <div v-for="row in results.diag2.missed" :key="row.id" class="diag-row">
+                                    <code class="diag-id">{{ row.id }}</code>
+                                    <span class="diag-ctx">{{ row.context }}</span>
+                                </div>
+                            </div>
+                        </template>
                     </div>
                 </div>
 
@@ -904,4 +989,19 @@ code.bseg-id { color: #7dd3fc; font-size: 0.75rem; }
 .evt-change-pill { background: #422006; color: #fdba74; font-size: 0.72rem; padding: 2px 8px; border-radius: 99px; font-weight: 700; }
 .evt-change-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .evt-change-tag  { background: #2d1a00; border: 1px solid #92400e; color: #fbbf24; font-size: 0.72rem; padding: 2px 8px; border-radius: 99px; }
+
+/* Diagnostics panel */
+.diag-box { background: #12151f; border: 1px solid #2e3350; border-radius: 12px; padding: 1.2rem 1.4rem; margin-top: 1.5rem; font-size: 0.82rem; }
+.diag-header { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-bottom: 0.8rem; }
+.diag-title { font-size: 0.72rem; font-weight: 700; color: #8892b0; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
+.diag-formula { color: #8892b0; font-size: 0.8rem; }
+.diag-proof { display: flex; flex-wrap: wrap; gap: 0.3rem 1.5rem; align-items: center; padding: 0.6rem 0; border-top: 1px solid #2e3350; }
+.diag-eq { color: #e8eaf6; font-weight: 600; }
+.diag-ok   { color: #22c55e; font-weight: 700; }
+.diag-warn { color: #ef4444; font-weight: 700; }
+.diag-missed-label { font-size: 0.75rem; color: #8892b0; margin: 0.9rem 0 0.4rem; border-top: 1px solid #2e3350; padding-top: 0.8rem; }
+.diag-pdf-label { font-size: 0.7rem; font-weight: 700; color: #4f8ef7; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem; }
+.diag-row { display: flex; gap: 0.8rem; align-items: baseline; padding: 0.25rem 0; border-top: 1px solid #1e2035; font-size: 0.78rem; }
+.diag-id  { color: #a78bfa; white-space: nowrap; }
+.diag-ctx { color: #64748b; word-break: break-all; font-family: monospace; font-size: 0.72rem; }
 </style>
