@@ -146,7 +146,7 @@ function parseAccounts(raw: string): { accounts: Record<string, Account>; report
     const accounts: Record<string, Account> = {}
 
     // Name is letters/spaces/punctuation only — NO digits — so SA_IDs (10-digit) never extend the name
-    const G1_RE = /\b(\d{10})\b\s+([A-Za-z][A-Za-z,'\-\.\s]+?)\s+(RES|COM)\s+(\d{1,2})\s+(\d{2}-\d{2}-\d{4})\s+(\d{2}-\d{2}-\d{4})\s+([\d,]+\.\d{2})\s+(FROZEN|FREEZABLE\/PENDING|FREEZABLE|PENDING)((?:\s+\d{2}-\d{2}-\d{4}){0,12})/g
+    const G1_RE = /\b(\d{10})\b\s+([A-Za-z][A-Za-z,'\-\.\s]+?)\s+(RES|COM)\s+(\d{1,2})\s+(\d{2}-\d{2}-\d{4})\s+(\d{2}-\d{2}-\d{4})\s+([\d,]+(?:\.\d{1,2})?)\s+(FROZEN|FREEZABLE\/PENDING|FREEZABLE|PENDING)((?:\s+\d{2}-\d{2}-\d{4}){0,12})/g
     let m: RegExpExecArray | null
     while ((m = G1_RE.exec(text)) !== null) {
         const id = m[1]
@@ -169,7 +169,7 @@ function parseAccounts(raw: string): { accounts: Record<string, Account>; report
 
     // G_2: SA/BSEG rows
     // ACCT_ID(10d) | SA_TYPE | SA_ID(10d) | SA_END_DATE | BSEG_ID(12d) | Closing | BSEG_Stat | IsFinal | IsFrozen
-    const G2_RE = /\b(\d{10})\b\s+([A-Z][A-Z0-9\-\/]+)\s+(\d{10})\b\s+(\d{2}-\d{2}-\d{4})\s+(\d{12})\b\s+([YN])\s+(\d+)\s+([YN])\s+([YN])/g
+    const G2_RE = /\b(\d{10})\b\s+([A-Z][A-Z0-9\-\/]+)\s+(\d{10})\b\s+(\d{2}-\d{2}-\d{4})\s+(\d{12}|NONE)\b\s+([YN])\s+(\d+|N\/A)\s+([YN])\s+([YN])/g
     let m2: RegExpExecArray | null
     while ((m2 = G2_RE.exec(text)) !== null) {
         const accountId = m2[1]
@@ -209,6 +209,9 @@ function parseAccounts(raw: string): { accounts: Record<string, Account>; report
         if (seenIds.has(id)) continue
         seenIds.add(id)
         if (accounts[id]) continue
+        // Skip SA_IDs: in G_2 rows the SA_ID is the 3rd column, preceded by ACCT_ID + SA_TYPE
+        const before60 = text.slice(Math.max(0, sm.index - 60), sm.index)
+        if (/\b\d{10}\b\s+[A-Z][A-Z0-9\-\/]+\s+$/.test(before60)) continue
         const window200 = text.slice(sm.index, sm.index + 220)
         if (/\b(?:RES|COM)\b/.test(window200)) {
             missedCandidates.push(id)
