@@ -141,7 +141,7 @@ function normalize(raw: string): string {
 // RES|COM is the discriminator: SA_IDs (also 10-digit) are never followed by a standalone RES/COM + digit.
 // The 12 dates are captured inline so G_2 SA_END_DATEs don't bleed in.
 //
-function parseAccounts(raw: string): { accounts: Record<string, Account>; reportedTotal: number; diag: ParseDiag; allIds: Set<string>; missedCandidates: string[] } {
+function parseAccounts(raw: string): { accounts: Record<string, Account>; reportedTotal: number; diag: ParseDiag } {
     const text = normalize(raw)
     const accounts: Record<string, Account> = {}
 
@@ -194,18 +194,13 @@ function parseAccounts(raw: string): { accounts: Record<string, Account>; report
     const reportedTotal = totalM ? parseInt(totalM[1]) : Object.keys(accounts).length
     const parsedCount = Object.keys(accounts).length
 
-    // Scan every 10-digit ID in the text for two purposes:
-    //   allIds   — full set used to check "does this ID appear anywhere in the other PDF?"
-    //   missed   — IDs near RES|COM that weren't parsed (diagnostic + partial-removal rule)
-    const allIds = new Set<string>()
-    const missedCandidates: string[] = []
+    // Diagnostic scan: find 10-digit IDs near RES|COM that weren't parsed (skipping SA_IDs)
     const seenIds = new Set<string>()
     const missed: Array<{ id: string; context: string }> = []
     const scanRe = /\b(\d{10})\b/g
     let sm: RegExpExecArray | null
     while ((sm = scanRe.exec(text)) !== null) {
         const id = sm[1]
-        allIds.add(id)
         if (seenIds.has(id)) continue
         seenIds.add(id)
         if (accounts[id]) continue
@@ -214,13 +209,12 @@ function parseAccounts(raw: string): { accounts: Record<string, Account>; report
         if (/\b\d{10}\b\s+[A-Z][A-Z0-9\-\/]+\s+$/.test(before60)) continue
         const window200 = text.slice(sm.index, sm.index + 220)
         if (/\b(?:RES|COM)\b/.test(window200)) {
-            missedCandidates.push(id)
             if (missed.length < 30) missed.push({ id, context: window200 })
         }
     }
 
     const diag: ParseDiag = { reported: reportedTotal, parsed: parsedCount, missed }
-    return { accounts, reportedTotal, diag, allIds, missedCandidates }
+    return { accounts, reportedTotal, diag }
 }
 
 // ── Comparison ─────────────────────────────────────────────────────────────
@@ -265,31 +259,11 @@ async function run() {
             extractText(file1.value, p => { prog1.value = p }),
             extractText(file2.value, p => { prog2.value = p }),
         ])
-        const { accounts: acc1, reportedTotal: total1, diag: diag1, allIds: allIds1, missedCandidates: mc1 } = parseAccounts(raw1)
-        const { accounts: acc2, reportedTotal: total2, diag: diag2, allIds: allIds2, missedCandidates: mc2 } = parseAccounts(raw2)
+        const { accounts: acc1, reportedTotal: total1, diag: diag1 } = parseAccounts(raw1)
+        const { accounts: acc2, reportedTotal: total2, diag: diag2 } = parseAccounts(raw2)
         const bal1 = Object.values(acc1).reduce((s, a) => s + a.balance, 0)
         const bal2 = Object.values(acc2).reduce((s, a) => s + a.balance, 0)
         const cmp = compare(acc1, acc2)
-
-        // Rule: PDF#1 candidate ID not found anywhere in PDF#2 → removed
-        const partialRemovals: Account[] = mc1
-            .filter(id => !allIds2.has(id))
-            .map(id => ({
-                id, name: '', cls: '', sas: 0, billDate: '', dueDate: '',
-                balance: 0, freezeStatus: '', supposedDates: [], actualDates: [],
-                saDetails: [], partial: true,
-            }))
-        // Rule: PDF#2 candidate ID not found anywhere in PDF#1 → new (added)
-        const partialAdded: Account[] = mc2
-            .filter(id => !allIds1.has(id))
-            .map(id => ({
-                id, name: '', cls: '', sas: 0, billDate: '', dueDate: '',
-                balance: 0, freezeStatus: '', supposedDates: [], actualDates: [],
-                saDetails: [], partial: true,
-            }))
-        cmp.removed = [...cmp.removed, ...partialRemovals]
-        cmp.added   = [...cmp.added,   ...partialAdded]
-
         results.value = { acc1, acc2, bal1, bal2, total1, total2, diag1, diag2, ...cmp }
         activeTab.value = 'overview'
         await new Promise(r => setTimeout(r, 80))
