@@ -61,6 +61,8 @@ interface Results {
     unchanged: Account[]
     bal1: number
     bal2: number
+    total1: number
+    total2: number
 }
 
 // ── State ──────────────────────────────────────────────────────────────────
@@ -130,7 +132,7 @@ function normalize(raw: string): string {
 // RES|COM is the discriminator: SA_IDs (also 10-digit) are never followed by a standalone RES/COM + digit.
 // The 12 dates are captured inline so G_2 SA_END_DATEs don't bleed in.
 //
-function parseAccounts(raw: string): Record<string, Account> {
+function parseAccounts(raw: string): { accounts: Record<string, Account>; reportedTotal: number } {
     const text = normalize(raw)
     const accounts: Record<string, Account> = {}
 
@@ -176,7 +178,12 @@ function parseAccounts(raw: string): Record<string, Account> {
         })
     }
 
-    return accounts
+    // Read the TOTAL ACCOUNTS count the report itself printed on the page
+    const totalM = text.match(/TOTAL\s+ACCOUNTS?\s*:?\s*(\d+)/i)
+        || text.match(/NO\.?\s*OF\s+ACCTS?\s*:?\s*(\d+)/i)
+        || text.match(/ACCOUNTS?\s+COUNT\s*:?\s*(\d+)/i)
+    const reportedTotal = totalM ? parseInt(totalM[1]) : Object.keys(accounts).length
+    return { accounts, reportedTotal }
 }
 
 // ── Comparison ─────────────────────────────────────────────────────────────
@@ -221,11 +228,11 @@ async function run() {
             extractText(file1.value, p => { prog1.value = p }),
             extractText(file2.value, p => { prog2.value = p }),
         ])
-        const acc1 = parseAccounts(raw1)
-        const acc2 = parseAccounts(raw2)
+        const { accounts: acc1, reportedTotal: total1 } = parseAccounts(raw1)
+        const { accounts: acc2, reportedTotal: total2 } = parseAccounts(raw2)
         const bal1 = Object.values(acc1).reduce((s, a) => s + a.balance, 0)
         const bal2 = Object.values(acc2).reduce((s, a) => s + a.balance, 0)
-        results.value = { acc1, acc2, bal1, bal2, ...compare(acc1, acc2) }
+        results.value = { acc1, acc2, bal1, bal2, total1, total2, ...compare(acc1, acc2) }
         activeTab.value = 'overview'
         await new Promise(r => setTimeout(r, 80))
         renderCharts()
@@ -393,11 +400,11 @@ const tabs = [
                 <!-- Metrics -->
                 <div class="wof-metrics">
                     <div class="wof-metric blue">
-                        <div class="wof-metric-val">{{ Object.keys(results.acc1).length.toLocaleString() }}</div>
+                        <div class="wof-metric-val">{{ results.total1.toLocaleString() }}</div>
                         <div class="wof-metric-lbl">Accounts PDF #1</div>
                     </div>
                     <div class="wof-metric blue">
-                        <div class="wof-metric-val">{{ Object.keys(results.acc2).length.toLocaleString() }}</div>
+                        <div class="wof-metric-val">{{ results.total2.toLocaleString() }}</div>
                         <div class="wof-metric-lbl">Accounts PDF #2</div>
                     </div>
                     <div class="wof-metric" :class="(results.changed.length + results.removed.length + results.added.length) > 0 ? 'yellow' : 'green'">
