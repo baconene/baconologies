@@ -145,22 +145,25 @@ function parseAccounts(raw: string): { accounts: Record<string, Account>; report
     const text = normalize(raw)
     const accounts: Record<string, Account> = {}
 
-    // Name is letters/spaces/punctuation only — NO digits — so SA_IDs (10-digit) never extend the name
-    const G1_RE = /\b(\d{10})\b\s+([A-Za-z][A-Za-z,'\-\.\s]+?)\s+(RES|COM)\s+(\d{1,2})\s+(\d{2}-\d{2}-\d{4})\s+(\d{2}-\d{2}-\d{4})\s+([\d,]+(?:\.\d{1,2})?)\s+(FROZEN|FREEZABLE\/PENDING|FREEZABLE|PENDING)((?:\s+\d{2}-\d{2}-\d{4}){0,12})/g
+    // Name allows digits/symbols: "31 North LLC", "% Kirk Realty", "Pulte Group - 1050", "W & W Properties"
+    // Bill/due dates may be partial fragments (e.g. "03-" "03-") when PDF splits the year to another chunk;
+    // captured flexibly as zero-or-more date tokens ending in "-", balance anchored by FROZEN/FREEZABLE keyword.
+    const G1_RE = /\b(\d{10})\b\s+([A-Za-z\d%&()',\-\.\s\/]+?)\s+(RES|COM)\s+(\d{1,2})\s+((?:\d{2}-[\d-]*\s+)*)([\d,]+(?:\.\d{1,2})?)\s+(FROZEN|FREEZABLE\/\s*PENDING|FREEZABLE|PENDING)((?:\s+\d{2}-\d{2}-\d{4}){0,12})/g
     let m: RegExpExecArray | null
     while ((m = G1_RE.exec(text)) !== null) {
         const id = m[1]
         if (accounts[id]) continue
-        const dates = (m[9] || '').trim().split(/\s+/).filter(Boolean)
+        const dateParts = (m[5] || '').trim().split(/\s+/).filter(Boolean)
+        const dates = (m[8] || '').trim().split(/\s+/).filter(Boolean)
         accounts[id] = {
             id,
             name:          m[2].trim(),
             cls:           m[3],
             sas:           parseInt(m[4]),
-            billDate:      m[5],
-            dueDate:       m[6],
-            balance:       parseFloat(m[7].replace(/,/g, '')),
-            freezeStatus:  m[8],
+            billDate:      dateParts[0] || '',
+            dueDate:       dateParts[1] || '',
+            balance:       parseFloat(m[6].replace(/,/g, '')),
+            freezeStatus:  m[7],
             supposedDates: dates.slice(0, 6),
             actualDates:   dates.slice(6, 12),
             saDetails:     [],
