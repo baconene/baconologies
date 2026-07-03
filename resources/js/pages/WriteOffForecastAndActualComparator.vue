@@ -42,6 +42,7 @@ interface Account {
     supposedDates: string[]
     actualDates: string[]
     saDetails: SaDetail[]
+    partial?: boolean
 }
 
 interface Change {
@@ -140,7 +141,7 @@ function normalize(raw: string): string {
 // RES|COM is the discriminator: SA_IDs (also 10-digit) are never followed by a standalone RES/COM + digit.
 // The 12 dates are captured inline so G_2 SA_END_DATEs don't bleed in.
 //
-function parseAccounts(raw: string): { accounts: Record<string, Account>; reportedTotal: number; diag: ParseDiag } {
+function parseAccounts(raw: string): { accounts: Record<string, Account>; reportedTotal: number; diag: ParseDiag; allIds: Set<string>; missedCandidates: string[] } {
     const text = normalize(raw)
     const accounts: Record<string, Account> = {}
 
@@ -193,24 +194,30 @@ function parseAccounts(raw: string): { accounts: Record<string, Account>; report
     const reportedTotal = totalM ? parseInt(totalM[1]) : Object.keys(accounts).length
     const parsedCount = Object.keys(accounts).length
 
-    // Diagnostic: find 10-digit IDs near RES|COM that weren't captured by G_1
-    const missed: Array<{ id: string; context: string }> = []
+    // Scan every 10-digit ID in the text for two purposes:
+    //   allIds   — full set used to check "does this ID appear anywhere in the other PDF?"
+    //   missed   — IDs near RES|COM that weren't parsed (diagnostic + partial-removal rule)
+    const allIds = new Set<string>()
+    const missedCandidates: string[] = []
     const seenIds = new Set<string>()
+    const missed: Array<{ id: string; context: string }> = []
     const scanRe = /\b(\d{10})\b/g
     let sm: RegExpExecArray | null
     while ((sm = scanRe.exec(text)) !== null) {
         const id = sm[1]
+        allIds.add(id)
         if (seenIds.has(id)) continue
         seenIds.add(id)
         if (accounts[id]) continue
         const window200 = text.slice(sm.index, sm.index + 220)
-        if (/\b(?:RES|COM)\b/.test(window200) && missed.length < 30) {
-            missed.push({ id, context: window200 })
+        if (/\b(?:RES|COM)\b/.test(window200)) {
+            missedCandidates.push(id)
+            if (missed.length < 30) missed.push({ id, context: window200 })
         }
     }
 
     const diag: ParseDiag = { reported: reportedTotal, parsed: parsedCount, missed }
-    return { accounts, reportedTotal, diag }
+    return { accounts, reportedTotal, diag, allIds, missedCandidates }
 }
 
 // ── Comparison ─────────────────────────────────────────────────────────────
@@ -255,11 +262,32 @@ async function run() {
             extractText(file1.value, p => { prog1.value = p }),
             extractText(file2.value, p => { prog2.value = p }),
         ])
-        const { accounts: acc1, reportedTotal: total1, diag: diag1 } = parseAccounts(raw1)
-        const { accounts: acc2, reportedTotal: total2, diag: diag2 } = parseAccounts(raw2)
+        const { accounts: acc1, reportedTotal: total1, diag: diag1, allIds: allIds1, missedCandidates: mc1 } = parseAccounts(raw1)
+        const { accounts: acc2, reportedTotal: total2, diag: diag2, allIds: allIds2, missedCandidates: mc2 } = parseAccounts(raw2)
         const bal1 = Object.values(acc1).reduce((s, a) => s + a.balance, 0)
         const bal2 = Object.values(acc2).reduce((s, a) => s + a.balance, 0)
-        results.value = { acc1, acc2, bal1, bal2, total1, total2, diag1, diag2, ...compare(acc1, acc2) }
+        const cmp = compare(acc1, acc2)
+
+        // Rule: PDF#1 candidate ID not found anywhere in PDF#2 → removed
+        const partialRemovals: Account[] = mc1
+            .filter(id => !allIds2.has(id))
+            .map(id => ({
+                id, name: '', cls: '', sas: 0, billDate: '', dueDate: '',
+                balance: 0, freezeStatus: '', supposedDates: [], actualDates: [],
+                saDetails: [], partial: true,
+            }))
+        // Rule: PDF#2 candidate ID not found anywhere in PDF#1 → new (added)
+        const partialAdded: Account[] = mc2
+            .filter(id => !allIds1.has(id))
+            .map(id => ({
+                id, name: '', cls: '', sas: 0, billDate: '', dueDate: '',
+                balance: 0, freezeStatus: '', supposedDates: [], actualDates: [],
+                saDetails: [], partial: true,
+            }))
+        cmp.removed = [...cmp.removed, ...partialRemovals]
+        cmp.added   = [...cmp.added,   ...partialAdded]
+
+        results.value = { acc1, acc2, bal1, bal2, total1, total2, diag1, diag2, ...cmp }
         activeTab.value = 'overview'
         await new Promise(r => setTimeout(r, 80))
         renderCharts()
@@ -688,20 +716,27 @@ const tabs = [
                             </tr></thead>
                             <tbody>
                                 <template v-for="a in filtered(results.removed, 'removed')" :key="a.id">
-                                    <tr>
-                                        <td><button class="wof-expand-btn" @click="toggleRow(a.id)">{{ expandedRows.has(a.id) ? '▲' : '▼' }}</button></td>
+                                    <tr :class="a.partial ? 'partial-row' : ''">
+                                        <td>
+                                            <button v-if="!a.partial" class="wof-expand-btn" @click="toggleRow(a.id)">{{ expandedRows.has(a.id) ? '▲' : '▼' }}</button>
+                                        </td>
                                         <td><code>{{ a.id }}</code></td>
-                                        <td>{{ a.name }}</td>
-                                        <td><span class="wof-cls" :class="clsClass(a.cls)">{{ a.cls }}</span></td>
-                                        <td class="wof-zero">{{ a.sas }}</td>
-                                        <td>{{ a.billDate }}</td>
-                                        <td>{{ a.dueDate }}</td>
-                                        <td>${{ a.balance.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</td>
-                                        <td><span class="wof-freeze" :class="freezeClass(a.freezeStatus)">{{ a.freezeStatus || '—' }}</span></td>
-                                        <td>{{ a.actualDates[0] || '—' }}</td>
-                                        <td>{{ a.actualDates[5] || '—' }}</td>
+                                        <td v-if="a.partial" colspan="9" class="wof-zero" style="font-style:italic">
+                                            <span class="partial-badge">partial</span> Row not fully parsed — account confirmed absent from PDF #2
+                                        </td>
+                                        <template v-else>
+                                            <td>{{ a.name }}</td>
+                                            <td><span class="wof-cls" :class="clsClass(a.cls)">{{ a.cls }}</span></td>
+                                            <td class="wof-zero">{{ a.sas }}</td>
+                                            <td>{{ a.billDate }}</td>
+                                            <td>{{ a.dueDate }}</td>
+                                            <td>${{ a.balance.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</td>
+                                            <td><span class="wof-freeze" :class="freezeClass(a.freezeStatus)">{{ a.freezeStatus || '—' }}</span></td>
+                                            <td>{{ a.actualDates[0] || '—' }}</td>
+                                            <td>{{ a.actualDates[5] || '—' }}</td>
+                                        </template>
                                     </tr>
-                                    <tr v-if="expandedRows.has(a.id)" class="detail-expand-row">
+                                    <tr v-if="!a.partial && expandedRows.has(a.id)" class="detail-expand-row">
                                         <td colspan="11">
                                             <div class="detail-panels">
                                                 <div class="detail-panel">
@@ -755,20 +790,27 @@ const tabs = [
                             </tr></thead>
                             <tbody>
                                 <template v-for="a in filtered(results.added, 'added')" :key="a.id">
-                                    <tr>
-                                        <td><button class="wof-expand-btn" @click="toggleRow(a.id)">{{ expandedRows.has(a.id) ? '▲' : '▼' }}</button></td>
+                                    <tr :class="a.partial ? 'partial-row' : ''">
+                                        <td>
+                                            <button v-if="!a.partial" class="wof-expand-btn" @click="toggleRow(a.id)">{{ expandedRows.has(a.id) ? '▲' : '▼' }}</button>
+                                        </td>
                                         <td><code>{{ a.id }}</code></td>
-                                        <td>{{ a.name }}</td>
-                                        <td><span class="wof-cls" :class="clsClass(a.cls)">{{ a.cls }}</span></td>
-                                        <td class="wof-zero">{{ a.sas }}</td>
-                                        <td>{{ a.billDate }}</td>
-                                        <td>{{ a.dueDate }}</td>
-                                        <td>${{ a.balance.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</td>
-                                        <td><span class="wof-freeze" :class="freezeClass(a.freezeStatus)">{{ a.freezeStatus || '—' }}</span></td>
-                                        <td>{{ a.actualDates[0] || '—' }}</td>
-                                        <td>{{ a.actualDates[5] || '—' }}</td>
+                                        <td v-if="a.partial" colspan="9" class="wof-zero" style="font-style:italic">
+                                            <span class="partial-badge">partial</span> Row not fully parsed — account confirmed absent from PDF #1
+                                        </td>
+                                        <template v-else>
+                                            <td>{{ a.name }}</td>
+                                            <td><span class="wof-cls" :class="clsClass(a.cls)">{{ a.cls }}</span></td>
+                                            <td class="wof-zero">{{ a.sas }}</td>
+                                            <td>{{ a.billDate }}</td>
+                                            <td>{{ a.dueDate }}</td>
+                                            <td>${{ a.balance.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</td>
+                                            <td><span class="wof-freeze" :class="freezeClass(a.freezeStatus)">{{ a.freezeStatus || '—' }}</span></td>
+                                            <td>{{ a.actualDates[0] || '—' }}</td>
+                                            <td>{{ a.actualDates[5] || '—' }}</td>
+                                        </template>
                                     </tr>
-                                    <tr v-if="expandedRows.has(a.id)" class="detail-expand-row">
+                                    <tr v-if="!a.partial && expandedRows.has(a.id)" class="detail-expand-row">
                                         <td colspan="11">
                                             <div class="detail-panels">
                                                 <div class="detail-panel">
@@ -989,6 +1031,10 @@ code.bseg-id { color: #7dd3fc; font-size: 0.75rem; }
 .evt-change-pill { background: #422006; color: #fdba74; font-size: 0.72rem; padding: 2px 8px; border-radius: 99px; font-weight: 700; }
 .evt-change-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .evt-change-tag  { background: #2d1a00; border: 1px solid #92400e; color: #fbbf24; font-size: 0.72rem; padding: 2px 8px; border-radius: 99px; }
+
+/* Partial (unmatched) rows */
+.partial-row td { background: #1a1208 !important; color: #6b7280; }
+.partial-badge { display: inline-block; background: #422006; color: #fdba74; font-size: 0.68rem; font-weight: 700; padding: 1px 6px; border-radius: 99px; margin-right: 0.4rem; font-style: normal; }
 
 /* Diagnostics panel */
 .diag-box { background: #12151f; border: 1px solid #2e3350; border-radius: 12px; padding: 1.2rem 1.4rem; margin-top: 1.5rem; font-size: 0.82rem; }
