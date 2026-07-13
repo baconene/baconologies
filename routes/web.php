@@ -27,6 +27,10 @@ Route::get('/sampleNWSForecast', function () {
     return Inertia::render('SampleNWSForecast');
 })->name('sampleNWSForecast');
 
+Route::get('/carmel', function () {
+    return Inertia::render('Carmel');
+})->name('carmel');
+
 Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
