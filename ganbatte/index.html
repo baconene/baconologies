@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GO MIRA!</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #fff9c4 0%, #ffe082 40%, #ffcc02 100%);
+      font-family: 'Georgia', serif;
+      overflow: hidden;
+    }
+
+    .sunflowers {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .sunflower {
+      position: absolute;
+      font-size: 2.5rem;
+      animation: float linear infinite;
+      opacity: 0.35;
+    }
+
+    @keyframes float {
+      0%   { transform: translateY(110vh) rotate(0deg);   opacity: 0; }
+      10%  { opacity: 0.35; }
+      90%  { opacity: 0.35; }
+      100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 3.5rem 4rem;
+      background: rgba(255, 255, 255, 0.72);
+      border-radius: 2rem;
+      box-shadow: 0 8px 48px rgba(255, 180, 0, 0.35);
+      backdrop-filter: blur(6px);
+      max-width: 640px;
+      width: 90%;
+    }
+
+    .emoji {
+      font-size: 5rem;
+      line-height: 1;
+      margin-bottom: 1.2rem;
+      display: block;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50%       { transform: scale(1.12); }
+    }
+
+    h1 {
+      font-size: clamp(2rem, 6vw, 3.4rem);
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      line-height: 1.15;
+      color: #b8600a;
+      text-shadow: 2px 2px 0 rgba(255,200,0,0.5);
+    }
+
+    .subtitle {
+      margin-top: 1.4rem;
+      font-size: clamp(1.1rem, 3vw, 1.5rem);
+      color: #7a4400;
+      font-style: italic;
+      letter-spacing: 0.02em;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sunflowers" id="sunflowers"></div>
+
+  <div class="card">
+    <span class="emoji">🌻</span>
+    <h1>GO MIRA!</h1>
+    <p class="subtitle">LOVE YOU &mdash; YOU CAN DO IT</p>
+  </div>
+
+  <script>
+    const container = document.getElementById('sunflowers');
+    const count = 18;
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('span');
+      el.className = 'sunflower';
+      el.textContent = '🌻';
+      el.style.left = Math.random() * 100 + 'vw';
+      el.style.animationDuration = (8 + Math.random() * 10) + 's';
+      el.style.animationDelay = (Math.random() * 12) + 's';
+      el.style.fontSize = (1.5 + Math.random() * 2.5) + 'rem';
+      container.appendChild(el);
+    }
+  </script>
+</body>
+</html>

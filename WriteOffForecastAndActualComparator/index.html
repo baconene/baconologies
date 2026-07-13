@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Write-Off Forecast Comparator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3350;
+      --accent: #4f8ef7;
+      --accent2: #7c3aed;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #eab308;
+      --text: #e8eaf6;
+      --muted: #8892b0;
+      --radius: 12px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(90deg, #1a1d27 0%, #22263a 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 1.2rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    header h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.02em;
+    }
+    header span.tag {
+      background: var(--accent2);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 99px;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── LAYOUT ── */
+    main { max-width: 1280px; margin: 0 auto; padding: 2rem; }
+
+    /* ── UPLOAD ZONE ── */
+    .upload-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 720px) { .upload-grid { grid-template-columns: 1fr; } }
+
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+    .drop-zone.drag-over { border-color: var(--accent); background: #1e2440; }
+    .drop-zone.loaded { border-color: var(--green); }
+    .drop-zone input[type=file] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .drop-zone .icon { font-size: 2.5rem; margin-bottom: 0.6rem; display: block; }
+    .drop-zone .label { font-size: 0.9rem; color: var(--muted); }
+    .drop-zone .filename { font-size: 0.85rem; color: var(--green); margin-top: 0.5rem; font-weight: 600; }
+    .drop-zone .progress-bar {
+      margin-top: 1rem;
+      height: 4px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+      display: none;
+    }
+    .drop-zone .progress-bar .fill {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.1s;
+    }
+
+    .compare-btn {
+      display: block;
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: opacity 0.2s;
+      margin-bottom: 2.5rem;
+    }
+    .compare-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── METRICS ── */
+    .metrics { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 2.5rem; }
+    .metric-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem 1rem;
+      text-align: center;
+    }
+    .metric-card .val { font-size: 2rem; font-weight: 800; line-height: 1; }
+    .metric-card .lbl { font-size: 0.72rem; color: var(--muted); margin-top: 0.4rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    .metric-card.green .val { color: var(--green); }
+    .metric-card.red   .val { color: var(--red); }
+    .metric-card.yellow .val { color: var(--yellow); }
+    .metric-card.blue  .val { color: var(--accent); }
+    .metric-card.purple .val { color: #a78bfa; }
+
+    /* ── TABS ── */
+    .tab-bar { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
+    .tab-btn {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── CHARTS ── */
+    .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+    @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem;
+    }
+    .chart-card h3 { font-size: 0.85rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 1rem; }
+    .chart-card canvas { max-height: 280px; }
+
+    /* ── INSIGHTS ── */
+    .insights-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .insight-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem;
+    }
+    .insight-card .title { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+    .insight-card .value { font-size: 1.1rem; font-weight: 700; }
+    .insight-card .sub { font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem; }
+
+    /* ── TABLES ── */
+    .table-controls { display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; }
+    .search-box {
+      flex: 1; min-width: 200px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 0.5rem 0.8rem;
+      font-size: 0.85rem;
+    }
+    .search-box:focus { outline: none; border-color: var(--accent); }
+    .row-count { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+
+    .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th {
+      background: var(--surface2);
+      padding: 0.7rem 0.9rem;
+      text-align: left;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+    th:hover { color: var(--accent); }
+    th.sort-asc::after { content: ' ▲'; }
+    th.sort-desc::after { content: ' ▼'; }
+    td { padding: 0.6rem 0.9rem; border-top: 1px solid var(--border); vertical-align: top; }
+    tr:hover td { background: #1e2035; }
+    .badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 99px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+    .badge.frozen { background: #1e40af; color: #93c5fd; }
+    .badge.freezable { background: #78350f; color: #fcd34d; }
+    .badge.green { background: #14532d; color: #86efac; }
+    .badge.red { background: #7f1d1d; color: #fca5a5; }
+    .badge.neutral { background: #1e293b; color: #94a3b8; }
+    .delta-pos { color: var(--red); font-weight: 700; }
+    .delta-neg { color: var(--green); font-weight: 700; }
+    .delta-zero { color: var(--muted); }
+
+    /* ── EMPTY / LOADING ── */
+    .placeholder {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--muted);
+    }
+    .placeholder .icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
+    #results { display: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Write-Off Forecast Comparator</h1>
+  <span class="tag">PDF ANALYSIS</span>
+</header>
+
+<main>
+  <!-- Upload -->
+  <div class="upload-grid">
+    <div class="drop-zone" id="zone1" ondragover="dragOver(event,'zone1')" ondragleave="dragLeave('zone1')" ondrop="drop(event,'zone1')">
+      <input type="file" accept=".pdf" onchange="fileChosen(this,'zone1')" />
+      <span class="icon">📄</span>
+      <div class="label">PDF #1 — Baseline Report<br><small>Drag &amp; drop or click to select</small></div>
+      <div class="filename" id="name1"></div>
+      <div class="progress-bar" id="prog1"><div class="fill" id="fill1"></div></div>
+    </div>
+    <div class="drop-zone" id="zone2" ondragover="dragOver(event,'zone2')" ondragleave="dragLeave('zone2')" ondrop="drop(event,'zone2')">
+      <input type="file" accept=".pdf" onchange="fileChosen(this,'zone2')" />
+      <span class="icon">📄</span>
+      <div class="label">PDF #2 — Comparison Report<br><small>Drag &amp; drop or click to select</small></div>
+      <div class="filename" id="name2"></div>
+      <div class="progress-bar" id="prog2"><div class="fill" id="fill2"></div></div>
+    </div>
+  </div>
+
+  <button class="compare-btn" id="compareBtn" disabled onclick="runComparison()">
+    ⚡ Compare Reports
+  </button>
+
+  <!-- Results -->
+  <div id="results">
+    <!-- Metric cards -->
+    <div class="metrics" id="metricsRow"></div>
+
+    <!-- Tabs -->
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('overview',this)">Overview</button>
+      <button class="tab-btn" onclick="switchTab('changes',this)">Changed Accounts</button>
+      <button class="tab-btn" onclick="switchTab('removed',this)">Removed / Resolved</button>
+      <button class="tab-btn" onclick="switchTab('added',this)">New Accounts</button>
+      <button class="tab-btn" onclick="switchTab('unchanged',this)">Unchanged</button>
+    </div>
+
+    <!-- Overview -->
+    <div class="tab-panel active" id="tab-overview">
+      <div class="charts-grid">
+        <div class="chart-card"><h3>Account Breakdown</h3><canvas id="chartBreakdown"></canvas></div>
+        <div class="chart-card"><h3>Total Outstanding Balance</h3><canvas id="chartBalance"></canvas></div>
+        <div class="chart-card"><h3>Freeze Status Distribution</h3><canvas id="chartFreeze"></canvas></div>
+        <div class="chart-card"><h3>Top 10 Balance Changes</h3><canvas id="chartTopChanges"></canvas></div>
+      </div>
+      <div class="insights-grid" id="insightsGrid"></div>
+    </div>
+
+    <!-- Changed -->
+    <div class="tab-panel" id="tab-changes">
+      <div class="table-controls">
+        <input class="search-box" type="search" placeholder="Search accounts…" oninput="filterTable('tblChanges',this.value)" />
+        <span class="row-count" id="countChanges"></span>
+      </div>
+      <div class="table-wrap">
+        <table id="tblChanges">
+          <thead><tr>
+            <th onclick="sortTable('tblChanges',0)">Account ID</th>
+            <th onclick="sortTable('tblChanges',1)">Name</th>
+            <th onclick="sortTable('tblChanges',2)">Class</th>
+            <th onclick="sortTable('tblChanges',3)">Balance #1</th>
+            <th onclick="sortTable('tblChanges',4)">Balance #2</th>
+            <th onclick="sortTable('tblChanges',5)">Δ Balance</th>
+            <th onclick="sortTable('tblChanges',6)">Freeze #1</th>
+            <th onclick="sortTable('tblChanges',7)">Freeze #2</th>
+            <th onclick="sortTable('tblChanges',8)">SAs #1</th>
+            <th onclick="sortTable('tblChanges',9)">SAs #2</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Removed -->
+    <div class="tab-panel" id="tab-removed">
+      <div class="table-controls">
+        <input class="search-box" type="search" placeholder="Search accounts…" oninput="filterTable('tblRemoved',this.value)" />
+        <span class="row-count" id="countRemoved"></span>
+      </div>
+      <div class="table-wrap">
+        <table id="tblRemoved">
+          <thead><tr>
+            <th onclick="sortTable('tblRemoved',0)">Account ID</th>
+            <th onclick="sortTable('tblRemoved',1)">Name</th>
+            <th onclick="sortTable('tblRemoved',2)">Class</th>
+            <th onclick="sortTable('tblRemoved',3)">SAs</th>
+            <th onclick="sortTable('tblRemoved',4)">Balance</th>
+            <th onclick="sortTable('tblRemoved',5)">Freeze Status</th>
+            <th onclick="sortTable('tblRemoved',6)">Bill Date</th>
+            <th onclick="sortTable('tblRemoved',7)">Due Date</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Added -->
+    <div class="tab-panel" id="tab-added">
+      <div class="table-controls">
+        <input class="search-box" type="search" placeholder="Search accounts…" oninput="filterTable('tblAdded',this.value)" />
+        <span class="row-count" id="countAdded"></span>
+      </div>
+      <div class="table-wrap">
+        <table id="tblAdded">
+          <thead><tr>
+            <th onclick="sortTable('tblAdded',0)">Account ID</th>
+            <th onclick="sortTable('tblAdded',1)">Name</th>
+            <th onclick="sortTable('tblAdded',2)">Class</th>
+            <th onclick="sortTable('tblAdded',3)">SAs</th>
+            <th onclick="sortTable('tblAdded',4)">Balance</th>
+            <th onclick="sortTable('tblAdded',5)">Freeze Status</th>
+            <th onclick="sortTable('tblAdded',6)">Bill Date</th>
+            <th onclick="sortTable('tblAdded',7)">Due Date</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Unchanged -->
+    <div class="tab-panel" id="tab-unchanged">
+      <div class="table-controls">
+        <input class="search-box" type="search" placeholder="Search accounts…" oninput="filterTable('tblUnchanged',this.value)" />
+        <span class="row-count" id="countUnchanged"></span>
+      </div>
+      <div class="table-wrap">
+        <table id="tblUnchanged">
+          <thead><tr>
+            <th onclick="sortTable('tblUnchanged',0)">Account ID</th>
+            <th onclick="sortTable('tblUnchanged',1)">Name</th>
+            <th onclick="sortTable('tblUnchanged',2)">Class</th>
+            <th onclick="sortTable('tblUnchanged',3)">SAs</th>
+            <th onclick="sortTable('tblUnchanged',4)">Balance</th>
+            <th onclick="sortTable('tblUnchanged',5)">Freeze Status</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+let files = { zone1: null, zone2: null };
+let charts = {};
+
+// ── DRAG / DROP ──────────────────────────────────────────
+function dragOver(e, id) { e.preventDefault(); document.getElementById(id).classList.add('drag-over'); }
+function dragLeave(id) { document.getElementById(id).classList.remove('drag-over'); }
+function drop(e, id) {
+  e.preventDefault();
+  dragLeave(id);
+  const file = e.dataTransfer.files[0];
+  if (file && file.name.endsWith('.pdf')) assignFile(id, file);
+}
+function fileChosen(input, id) { if (input.files[0]) assignFile(id, input.files[0]); }
+function assignFile(id, file) {
+  files[id] = file;
+  document.getElementById('name' + id.slice(-1)).textContent = '📎 ' + file.name;
+  document.getElementById(id).classList.add('loaded');
+  updateCompareBtn();
+}
+function updateCompareBtn() {
+  document.getElementById('compareBtn').disabled = !(files.zone1 && files.zone2);
+}
+
+// ── PDF EXTRACTION ───────────────────────────────────────
+async function extractText(file, fillId, progId) {
+  const ab = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+  const progBar = document.getElementById(progId);
+  const fill = document.getElementById(fillId);
+  progBar.style.display = 'block';
+  const parts = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    // Join items preserving rough column spacing
+    parts.push(content.items.map(it => it.str).join(' '));
+    fill.style.width = Math.round(i / pdf.numPages * 100) + '%';
+  }
+  progBar.style.display = 'none';
+  return parts.join('\n');
+}
+
+// ── TEXT NORMALIZATION ───────────────────────────────────
+function normalizeText(raw) {
+  return raw
+    // Rejoin split freeze statuses
+    .replace(/FREEZAB\s*LE\s*\/\s*PENDI\s*NG/gi, 'FREEZABLE/PENDING')
+    // Rejoin split dates: "02- 10- 2023" or "02-\n10-\n2023"
+    .replace(/(\d{2})-\s+(\d{2})-\s+(\d{4})/g, '$1-$2-$3')
+    // Collapse excessive whitespace (keep newlines as single space)
+    .replace(/\n/g, ' ')
+    .replace(/\s{2,}/g, ' ');
+}
+
+// ── ACCOUNT PARSING ──────────────────────────────────────
+function parseAccounts(raw) {
+  const text = normalizeText(raw);
+  const accounts = {};
+
+  // Primary pattern: 10-digit ID, name, RES/COM, SAs count, bill-date, due-date, balance, freeze-status
+  const re = /\b(\d{10})\b\s+([\w,'\-\. ]+?)\s+(RES|COM)\s+(\d{1,2})\s+(\d{2}-\d{2}-\d{4})\s+(\d{2}-\d{2}-\d{4})\s+([\d,]+\.?\d*)\s+(FROZEN|FREEZABLE\/PENDING)/g;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const id = m[1];
+    if (accounts[id]) continue; // first occurrence wins (header row before SA detail rows)
+
+    const balStr = m[7].replace(/,/g, '');
+    // Grab up to 12 date-like strings after the freeze status
+    const afterMatch = text.slice(m.index + m[0].length, m.index + m[0].length + 800);
+    const dateMatches = [...afterMatch.matchAll(/\d{2}-\d{2}-\d{4}/g)].slice(0, 12).map(d => d[0]);
+
+    accounts[id] = {
+      id,
+      name:        m[2].trim(),
+      class:       m[3],
+      sas:         parseInt(m[4], 10),
+      billDate:    m[5],
+      dueDate:     m[6],
+      balance:     parseFloat(balStr) || 0,
+      freezeStatus: m[8],
+      dates:       dateMatches,
+    };
+  }
+  return accounts;
+}
+
+function parseSummary(raw) {
+  const text = normalizeText(raw);
+  const totalAccounts = (text.match(/TOTAL\s+ACCOUNTS[:\s]+(\d+)/i) || [])[1];
+  const totalBalance  = (text.match(/TOTAL\s+OUTSTANDING\s+BALANCE[:\s]+([\d,]+\.?\d*)/i) || [])[1];
+  const woDate        = (text.match(/ACTUAL\s+WO\s+START\s+DATE[:\s]+(\d{2}-\d{2}-\d{4})/i) || [])[1];
+  return {
+    totalAccounts: totalAccounts ? parseInt(totalAccounts) : null,
+    totalBalance:  totalBalance  ? parseFloat(totalBalance.replace(/,/g,'')) : null,
+    woDate:        woDate || null,
+  };
+}
+
+// ── COMPARISON ───────────────────────────────────────────
+function compareReports(acc1, acc2) {
+  const ids1 = new Set(Object.keys(acc1));
+  const ids2 = new Set(Object.keys(acc2));
+
+  const removed   = [...ids1].filter(id => !ids2.has(id)).map(id => acc1[id]);
+  const added     = [...ids2].filter(id => !ids1.has(id)).map(id => acc2[id]);
+  const both      = [...ids1].filter(id => ids2.has(id));
+
+  const changed   = [];
+  const unchanged = [];
+
+  for (const id of both) {
+    const a = acc1[id], b = acc2[id];
+    const diff = (
+      a.balance      !== b.balance      ||
+      a.freezeStatus !== b.freezeStatus ||
+      a.sas          !== b.sas          ||
+      a.billDate     !== b.billDate     ||
+      a.dueDate      !== b.dueDate
+    );
+    if (diff) {
+      changed.push({ a, b, balanceDelta: b.balance - a.balance });
+    } else {
+      unchanged.push(a);
+    }
+  }
+
+  // Sort changed by |balanceDelta| desc
+  changed.sort((x, y) => Math.abs(y.balanceDelta) - Math.abs(x.balanceDelta));
+
+  return { removed, added, changed, unchanged };
+}
+
+// ── MAIN RUN ─────────────────────────────────────────────
+async function runComparison() {
+  const btn = document.getElementById('compareBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Processing…';
+
+  try {
+    const [raw1, raw2] = await Promise.all([
+      extractText(files.zone1, 'fill1', 'prog1'),
+      extractText(files.zone2, 'fill2', 'prog2'),
+    ]);
+
+    const acc1 = parseAccounts(raw1);
+    const acc2 = parseAccounts(raw2);
+    const sum1 = parseSummary(raw1);
+    const sum2 = parseSummary(raw2);
+    const result = compareReports(acc1, acc2);
+
+    renderResults(acc1, acc2, sum1, sum2, result);
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+  } catch(err) {
+    alert('Error processing PDFs: ' + err.message);
+    console.error(err);
+  }
+
+  btn.disabled = false;
+  btn.textContent = '⚡ Compare Reports';
+}
+
+// ── RENDER ───────────────────────────────────────────────
+function renderResults(acc1, acc2, sum1, sum2, result) {
+  const { removed, added, changed, unchanged } = result;
+  const n1 = Object.keys(acc1).length;
+  const n2 = Object.keys(acc2).length;
+  const totalBal1 = Object.values(acc1).reduce((s, a) => s + a.balance, 0);
+  const totalBal2 = Object.values(acc2).reduce((s, a) => s + a.balance, 0);
+  const totalDiff = changed.length + removed.length + added.length;
+  const balDelta  = totalBal2 - totalBal1;
+
+  // Metrics
+  const metrics = [
+    { val: n1,              lbl: 'Accounts PDF #1',   cls: 'blue' },
+    { val: n2,              lbl: 'Accounts PDF #2',   cls: 'blue' },
+    { val: totalDiff,       lbl: 'Total Differences', cls: totalDiff > 0 ? 'yellow' : 'green' },
+    { val: changed.length,  lbl: 'Changed',           cls: 'yellow' },
+    { val: removed.length,  lbl: 'Removed / Resolved',cls: 'green' },
+    { val: added.length,    lbl: 'New Accounts',      cls: 'red' },
+    { val: unchanged.length,lbl: 'Unchanged',         cls: 'neutral' },
+  ];
+  const row = document.getElementById('metricsRow');
+  row.innerHTML = metrics.map(m => `
+    <div class="metric-card ${m.cls}">
+      <div class="val">${typeof m.val === 'number' ? m.val.toLocaleString() : m.val}</div>
+      <div class="lbl">${m.lbl}</div>
+    </div>
+  `).join('');
+
+  // Charts
+  destroyCharts();
+
+  // 1) Doughnut breakdown
+  charts.breakdown = new Chart(document.getElementById('chartBreakdown'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Unchanged', 'Changed', 'Removed', 'New'],
+      datasets: [{ data: [unchanged.length, changed.length, removed.length, added.length],
+        backgroundColor: ['#22c55e','#eab308','#4f8ef7','#ef4444'], borderWidth: 0 }]
+    },
+    options: { plugins: { legend: { labels: { color: '#e8eaf6' } } }, cutout: '65%' }
+  });
+
+  // 2) Balance bar
+  charts.balance = new Chart(document.getElementById('chartBalance'), {
+    type: 'bar',
+    data: {
+      labels: ['PDF #1', 'PDF #2'],
+      datasets: [{ label: 'Total Outstanding Balance ($)',
+        data: [totalBal1, totalBal2],
+        backgroundColor: ['#4f8ef7','#7c3aed'], borderRadius: 6 }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { ticks: { color: '#8892b0', callback: v => '$' + v.toLocaleString() }, grid: { color: '#2e3350' } },
+        x: { ticks: { color: '#8892b0' }, grid: { display: false } }
+      }
+    }
+  });
+
+  // 3) Freeze status grouped bar
+  const countFreeze = (accs, status) =>
+    Object.values(accs).filter(a => a.freezeStatus === status).length;
+  charts.freeze = new Chart(document.getElementById('chartFreeze'), {
+    type: 'bar',
+    data: {
+      labels: ['FROZEN', 'FREEZABLE/PENDING'],
+      datasets: [
+        { label: 'PDF #1', data: [countFreeze(acc1,'FROZEN'), countFreeze(acc1,'FREEZABLE/PENDING')], backgroundColor: '#4f8ef7', borderRadius: 4 },
+        { label: 'PDF #2', data: [countFreeze(acc2,'FROZEN'), countFreeze(acc2,'FREEZABLE/PENDING')], backgroundColor: '#7c3aed', borderRadius: 4 },
+      ]
+    },
+    options: {
+      plugins: { legend: { labels: { color: '#e8eaf6' } } },
+      scales: {
+        y: { ticks: { color: '#8892b0' }, grid: { color: '#2e3350' } },
+        x: { ticks: { color: '#8892b0' }, grid: { display: false } }
+      }
+    }
+  });
+
+  // 4) Top 10 balance changes horizontal bar
+  const top10 = changed.slice(0, 10);
+  charts.topChanges = new Chart(document.getElementById('chartTopChanges'), {
+    type: 'bar',
+    data: {
+      labels: top10.map(c => c.a.id),
+      datasets: [{ label: 'Δ Balance ($)',
+        data: top10.map(c => c.balanceDelta),
+        backgroundColor: top10.map(c => c.balanceDelta > 0 ? '#ef4444' : '#22c55e'),
+        borderRadius: 4 }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#8892b0', callback: v => '$' + v.toLocaleString() }, grid: { color: '#2e3350' } },
+        y: { ticks: { color: '#8892b0', font: { size: 10 } }, grid: { display: false } }
+      }
+    }
+  });
+
+  // Insights
+  const biggestIncrease = changed.reduce((best, c) => (!best || c.balanceDelta > best.balanceDelta) ? c : best, null);
+  const biggestDecrease = changed.reduce((best, c) => (!best || c.balanceDelta < best.balanceDelta) ? c : best, null);
+  const frozenRemoved   = removed.filter(a => a.freezeStatus === 'FROZEN').length;
+  const balRecovered    = removed.reduce((s, a) => s + a.balance, 0);
+
+  document.getElementById('insightsGrid').innerHTML = [
+    { title: 'Balance Change (PDF1→PDF2)', value: fmt$(balDelta), sub: balDelta < 0 ? 'Exposure reduced' : 'Exposure increased', ok: balDelta <= 0 },
+    { title: 'Balance Recovered (Removed)', value: fmt$(balRecovered), sub: `${removed.length} accounts resolved`, ok: true },
+    { title: 'Frozen Accounts Removed', value: frozenRemoved, sub: 'from PDF #1 → not in PDF #2', ok: true },
+    { title: 'Largest Balance Increase', value: biggestIncrease ? fmt$(biggestIncrease.balanceDelta) + ' — ' + biggestIncrease.a.name : '—', sub: biggestIncrease ? biggestIncrease.a.id : '', ok: false },
+    { title: 'Largest Balance Decrease', value: biggestDecrease ? fmt$(biggestDecrease.balanceDelta) + ' — ' + biggestDecrease.a.name : '—', sub: biggestDecrease ? biggestDecrease.a.id : '', ok: true },
+    { title: 'New Accounts Exposure', value: fmt$(added.reduce((s,a) => s + a.balance, 0)), sub: `${added.length} new accounts in PDF #2`, ok: false },
+  ].map(i => `
+    <div class="insight-card">
+      <div class="title">${i.title}</div>
+      <div class="value" style="color:${i.ok ? '#22c55e' : '#e8eaf6'}">${i.value}</div>
+      <div class="sub">${i.sub}</div>
+    </div>
+  `).join('');
+
+  // Tables
+  renderChangedTable(changed);
+  renderSimpleTable('tblRemoved', 'countRemoved', removed);
+  renderSimpleTable('tblAdded',   'countAdded',   added);
+  renderSimpleTable('tblUnchanged','countUnchanged',unchanged);
+}
+
+function fmt$(v) {
+  const sign = v < 0 ? '-' : v > 0 ? '+' : '';
+  return sign + '$' + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function freezeBadge(s) {
+  const cls = s === 'FROZEN' ? 'frozen' : 'freezable';
+  return `<span class="badge ${cls}">${s}</span>`;
+}
+
+function renderChangedTable(changed) {
+  const tbody = document.querySelector('#tblChanges tbody');
+  tbody.innerHTML = changed.map(({ a, b, balanceDelta }) => `
+    <tr>
+      <td><code>${a.id}</code></td>
+      <td>${esc(a.name)}</td>
+      <td>${a.class}</td>
+      <td>$${a.balance.toLocaleString('en-US',{minimumFractionDigits:2})}</td>
+      <td>$${b.balance.toLocaleString('en-US',{minimumFractionDigits:2})}</td>
+      <td class="${balanceDelta > 0 ? 'delta-pos' : balanceDelta < 0 ? 'delta-neg' : 'delta-zero'}">${fmt$(balanceDelta)}</td>
+      <td>${freezeBadge(a.freezeStatus)}</td>
+      <td>${freezeBadge(b.freezeStatus)}</td>
+      <td>${a.sas}</td>
+      <td>${b.sas}</td>
+    </tr>
+  `).join('');
+  document.getElementById('countChanges').textContent = changed.length + ' accounts';
+}
+
+function renderSimpleTable(tblId, countId, accounts) {
+  const tbody = document.querySelector('#' + tblId + ' tbody');
+  const hasDateCols = document.querySelector('#' + tblId + ' thead tr').children.length > 6;
+  tbody.innerHTML = accounts.map(a => `
+    <tr>
+      <td><code>${a.id}</code></td>
+      <td>${esc(a.name)}</td>
+      <td>${a.class}</td>
+      <td>${a.sas}</td>
+      <td>$${a.balance.toLocaleString('en-US',{minimumFractionDigits:2})}</td>
+      <td>${freezeBadge(a.freezeStatus)}</td>
+      ${hasDateCols ? `<td>${a.billDate||''}</td><td>${a.dueDate||''}</td>` : ''}
+    </tr>
+  `).join('');
+  document.getElementById(countId).textContent = accounts.length + ' accounts';
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function destroyCharts() {
+  Object.values(charts).forEach(c => c.destroy());
+  charts = {};
+}
+
+// ── TAB SWITCHING ────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ── TABLE SEARCH ─────────────────────────────────────────
+function filterTable(tblId, query) {
+  const q = query.toLowerCase();
+  const rows = document.querySelectorAll('#' + tblId + ' tbody tr');
+  let visible = 0;
+  rows.forEach(row => {
+    const match = row.textContent.toLowerCase().includes(q);
+    row.style.display = match ? '' : 'none';
+    if (match) visible++;
+  });
+  // update count badge with filtered number
+  const countEl = document.getElementById('count' + tblId.replace('tbl',''));
+  if (countEl) {
+    const total = rows.length;
+    countEl.textContent = (q ? visible + ' of ' + total : total) + ' accounts';
+  }
+}
+
+// ── TABLE SORT ───────────────────────────────────────────
+const sortState = {};
+function sortTable(tblId, colIdx) {
+  const key = tblId + '_' + colIdx;
+  const asc = sortState[key] !== 'asc';
+  sortState[key] = asc ? 'asc' : 'desc';
+
+  // Clear all th indicators for this table
+  document.querySelectorAll('#' + tblId + ' th').forEach((th, i) => {
+    th.classList.remove('sort-asc','sort-desc');
+    if (i === colIdx) th.classList.add(asc ? 'sort-asc' : 'sort-desc');
+  });
+
+  const tbody = document.querySelector('#' + tblId + ' tbody');
+  const rows = [...tbody.querySelectorAll('tr')];
+  rows.sort((a, b) => {
+    const va = a.children[colIdx]?.textContent.trim() || '';
+    const vb = b.children[colIdx]?.textContent.trim() || '';
+    // Try numeric comparison
+    const na = parseFloat(va.replace(/[$,+]/g,''));
+    const nb = parseFloat(vb.replace(/[$,+]/g,''));
+    if (!isNaN(na) && !isNaN(nb)) return asc ? na - nb : nb - na;
+    return asc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+  rows.forEach(r => tbody.appendChild(r));
+}
+</script>
+</body>
+</html>

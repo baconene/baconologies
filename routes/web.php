@@ -31,6 +31,10 @@ Route::get('/carmel', function () {
     return Inertia::render('Carmel');
 })->name('carmel');
 
+Route::get('/WriteOffForecastAndActualComparator', function () {
+    return Inertia::render('WriteOffForecastAndActualComparator');
+})->name('writeOffComparator');
+
 Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
