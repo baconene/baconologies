@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\FitnessController;
 
 Route::get('/', function () {
     return Inertia::render('LandingPage', [
@@ -45,6 +46,19 @@ Route::middleware(['auth', 'verified'])->prefix('analytics')->group(function () 
     Route::get('/visitors', [AnalyticsController::class, 'visitors'])->name('analytics.visitors');
     Route::get('/charts', [AnalyticsController::class, 'charts'])->name('analytics.charts');
     Route::get('/real-time-stats', [AnalyticsController::class, 'getRealTimeStats'])->name('analytics.realtime');
+});
+
+// Fitness routes
+Route::prefix('fitness')->name('fitness.')->group(function () {
+    Route::get('/', [FitnessController::class, 'landing'])->name('home');
+
+    Route::middleware(['auth', 'verified'])->group(function () {
+        Route::get('/onboarding', [FitnessController::class, 'onboarding'])->name('onboarding');
+        Route::post('/onboarding', [FitnessController::class, 'storeProfile'])->name('onboarding.store');
+        Route::get('/dashboard', [FitnessController::class, 'dashboard'])->name('dashboard');
+        Route::get('/schedule', [FitnessController::class, 'schedule'])->name('schedule');
+        Route::post('/log', [FitnessController::class, 'storeLog'])->name('log');
+    });
 });
 
 require __DIR__.'/settings.php';
