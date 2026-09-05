@@ -57,6 +57,8 @@ Route::prefix('fitness')->name('fitness.')->group(function () {
         Route::post('/onboarding', [FitnessController::class, 'storeProfile'])->name('onboarding.store');
         Route::get('/dashboard', [FitnessController::class, 'dashboard'])->name('dashboard');
         Route::get('/schedule', [FitnessController::class, 'schedule'])->name('schedule');
+        Route::post('/schedule/save', [FitnessController::class, 'saveSchedule'])->name('schedule.save');
+        Route::post('/schedule/reset', [FitnessController::class, 'resetSchedule'])->name('schedule.reset');
         Route::post('/log', [FitnessController::class, 'storeLog'])->name('log');
     });
 });

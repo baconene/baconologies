@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\FitnessCustomSchedule;
 use App\Models\FitnessLog;
 use App\Models\FitnessProfile;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -79,16 +81,57 @@ class FitnessController extends Controller
 
     public function schedule(): Response|RedirectResponse
     {
-        $profile = Auth::user()->fitnessProfile;
+        $user    = Auth::user();
+        $profile = $user->fitnessProfile;
 
         if (! $profile) {
             return redirect()->route('fitness.onboarding');
         }
 
+        $custom = FitnessCustomSchedule::where('user_id', $user->id)
+            ->where('program_type', $profile->program_type)
+            ->first();
+
         return Inertia::render('fitness/Schedule', [
-            'programType' => $profile->program_type,
-            'goal'        => $profile->goal,
+            'programType'    => $profile->program_type,
+            'goal'           => $profile->goal,
+            'customSchedule' => $custom?->schedule_data,
         ]);
+    }
+
+    public function saveSchedule(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'schedule_data'                        => 'required|array|min:1',
+            'schedule_data.*.label'                => 'required|string|max:20',
+            'schedule_data.*.tag'                  => 'required|string|max:30',
+            'schedule_data.*.rest'                 => 'required|boolean',
+            'schedule_data.*.exercises'            => 'present|array',
+            'schedule_data.*.exercises.*.name'     => 'required|string|max:80',
+            'schedule_data.*.exercises.*.sets'     => 'required|integer|min:1|max:10',
+            'schedule_data.*.exercises.*.reps'     => 'required|string|max:20',
+            'schedule_data.*.exercises.*.muscle'   => 'required|string|max:40',
+        ]);
+
+        $profile = Auth::user()->fitnessProfile;
+
+        FitnessCustomSchedule::updateOrCreate(
+            ['user_id' => Auth::id(), 'program_type' => $profile->program_type],
+            ['schedule_data' => $data['schedule_data']],
+        );
+
+        return back()->with('success', 'Schedule saved!');
+    }
+
+    public function resetSchedule(): RedirectResponse
+    {
+        $profile = Auth::user()->fitnessProfile;
+
+        FitnessCustomSchedule::where('user_id', Auth::id())
+            ->where('program_type', $profile->program_type)
+            ->delete();
+
+        return back()->with('success', 'Schedule reset to default.');
     }
 
     public function storeLog(Request $request): RedirectResponse
