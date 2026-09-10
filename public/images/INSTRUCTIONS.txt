@@ -1,0 +1,9 @@
+To fix the 404 error for your developer avatar image:
+
+1. Save your image file as: developer-avatar.jpg
+2. Place it in this exact directory: c:\laravel-proj\baconologies\public\images\
+3. The final path should be: c:\laravel-proj\baconologies\public\images\developer-avatar.jpg
+
+Your image will then be accessible at: http://192.168.1.5:8000/images/developer-avatar.jpg
+
+Make sure the file name is exactly: developer-avatar.jpg (all lowercase, with hyphen)
