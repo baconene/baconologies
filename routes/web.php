@@ -20,6 +20,10 @@ Route::get('/ganbatteneMira', function () {
     return Inertia::render('GanbatteneMira');
 })->name('ganbatteneMira');
 
+Route::get('/hi-liann', function () {
+    return Inertia::render('HiLiann');
+})->name('hi-liann');
+
 Route::get('/congrats', function () {
     return Inertia::render('Congrats');
 })->name('congrats');
